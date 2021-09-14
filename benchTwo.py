@@ -1,4 +1,4 @@
-"""Second Benchmark for the DLCR program """
+"""Second Benchmark for the CLCR program """
 __author__ = "6947325: Johannes Zieres"
 __credits__ = ""
 __email__ = "19johannes99@web.de"

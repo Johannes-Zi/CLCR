@@ -1,4 +1,4 @@
-"""First benchmark for the DLCR program """
+"""First benchmark for the CLCR program """
 __author__ = "6947325: Johannes Zieres"
 __credits__ = ""
 __email__ = "19johannes99@web.de"
@@ -10,7 +10,6 @@ import glob
 import time
 import matplotlib.pyplot as plt
 
-#test
 
 def exclude_proteins_with_j(input_file_path):
     """
@@ -20,7 +19,7 @@ def exclude_proteins_with_j(input_file_path):
     :return: None, the new file is created at the cwd of the program
     """
 
-    # initialisiation
+    # Initialisiation
     input_file = open(input_file_path)
     new_lines = []
     current_protein = []
@@ -44,16 +43,15 @@ def exclude_proteins_with_j(input_file_path):
             append_bool = True
             current_protein.append(line)
 
-    # appending the last remaining region if possible
+    # Appending the last remaining region if possible
     if append_bool:
         new_lines += current_protein
 
     input_file.close()
 
-    # creating new file without the proteins which are containing "J" (for Leucine or Isoleucine)
+    # Creating new file without the proteins which are containing "J" (for Leucine or Isoleucine)
 
     new_file_path = os.getcwd() + "/" + input_file_path.split("/")[-1]
-    #new_file_path = "C:/Users/19joh/Desktop/GCF_000001735.4_TAIR10.1_protein_mod.faa"
     print("new file at: ", new_file_path)
 
     new_file = open(new_file_path, "w")
