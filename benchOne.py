@@ -1,4 +1,4 @@
-"""First benchmark for the DLCR program"""
+"""First benchmark for the DLCR program """
 __author__ = "6947325: Johannes Zieres"
 __credits__ = ""
 __email__ = "19johannes99@web.de"
