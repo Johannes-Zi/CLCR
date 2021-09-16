@@ -163,6 +163,7 @@ def create_slurmarry():
     # sbatch --array=1-3 arraytestfile.slurm
     return None
 
+
 def read_in_results(project_dir):
 
     """
