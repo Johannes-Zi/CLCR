@@ -1,7 +1,7 @@
 """Function for extracting the coverage data out of the bam files by using samtools"""
 __author__ = "6947325: Johannes Zieres"
 __credits__ = ""
-__email__ = "19johannes99@web.de"
+__email__ = "johannes.zieres@gmail.com"
 
 import os
 

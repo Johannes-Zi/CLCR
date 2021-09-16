@@ -3,7 +3,7 @@
 """This program ... is the main file :)"""
 __author__ = "6947325: Johannes Zieres"
 __credits__ = ""
-__email__ = "19johannes99@web.de"
+__email__ = "johannes.zieres@gmail.com"
 
 import bruteF
 import compD

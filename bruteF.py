@@ -1,7 +1,7 @@
 """This program is the bruteforce version for detecting interesting regions"""
 __author__ = "6947325: Johannes Zieres"
 __credits__ = ""
-__email__ = "19johannes99@web.de"
+__email__ = "johannes.zieres@gmail.com"
 
 
 def detect_regions(cov_file_path, cov_start, cov_end):
