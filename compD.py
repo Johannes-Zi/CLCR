@@ -8,7 +8,7 @@ import glob
 import copy
 
 
-def database_comparison(input_list, fna_file, min_lenght):
+def database_comparison(input_list, fna_file, min_lenght, query_dir):
 
     """
     This function creates the fasta query files for a diamond slurm job, out of a input list with the low coverage
@@ -16,6 +16,7 @@ def database_comparison(input_list, fna_file, min_lenght):
     :param input_list: list with tuples containing the start and the end of a region for database comparison
     :param fna_file: path of the fna file for receiving the base sequence
     :param min_lenght: expanding the detected regions to 500 if they are smaller, for a better working on diamond
+    :param query_dir: directory where the query files are stored in
     :return no return
     """
 
@@ -31,18 +32,15 @@ def database_comparison(input_list, fna_file, min_lenght):
     input_file.close()
 
     # creating the file path for input directory (cwd = current working directory of the process (.py file))
-    input_dir = os.getcwd() + "/input_dir"
-    os.mkdir(input_dir)         # creating the file for temporarily input directory
-    # creating the file path for output directory
-    output_dir = os.getcwd() + "/output_dir"
-    os.mkdir(output_dir)  # creating the file for temporarily output directory
+    #query_dir = os.getcwd() + "/input_dir"
+    #os.mkdir(query_dir)         # creating the file for temporarily input directory
 
-    seq_per_fasta = 3000     # number of sequences appended per .fasta file
+    seq_per_fasta = 5000     # number of sequences appended per .fasta file
     current_tuple = 0   # saves the position of the current region tuple in input_list
     fasta_count = 1     # for individual naming at creating of the .fasta files
 
     # creating the first fasta file
-    new_fasta = input_dir + "/" + "temp_in_" + str(fasta_count) + ".fasta"
+    new_fasta = query_dir + "/" + "temp_in_" + str(fasta_count) + ".fasta"
     current_fasta = open(new_fasta, "w")
 
     # possible first cases where the region cant be expanded 150 to the left,
@@ -102,7 +100,7 @@ def database_comparison(input_list, fna_file, min_lenght):
         # creating .fasta file for the next run
         fasta_count += 1
         current_fasta.close()
-        new_fasta = input_dir + "/" + "temp_in_" + str(fasta_count) + ".fasta"
+        new_fasta = query_dir + "/" + "temp_in_" + str(fasta_count) + ".fasta"
         current_fasta = open(new_fasta, "w")
 
     # possible last cases where the region cant be expanded 150 to the right,
@@ -134,32 +132,36 @@ def database_comparison(input_list, fna_file, min_lenght):
 
     print("created fasta files: ", fasta_count)
 
+    return None
+
+
+def create_slurmarry():
     """# creating the .slurm file for the jobarray
-    slurm_filename = os.getcwd() + "/" + "temp_" + dir_name + ".slurm"
-    slurm_file = open(slurm_filename, "w")
+        slurm_filename = os.getcwd() + "/" + "temp_" + dir_name + ".slurm"
+        slurm_file = open(slurm_filename, "w")
 
-    # -d database, -q query, -o output path, -k max hits saved per query seq in output file
-    # output format und e value vlt noch anpassen
-    blast_command = "/home/freya/bin/diamond blastx " \
-                    "-d /share/project/freya/NCBI/nrTaxonomy.dmnd " \
-                    "-q " + input_dir + "/temp_in_${SLURM_ARRAY_TASK_ID}.fasta " \
-                                        "-o " + output_dir + "/temp_out_${SLURM_ARRAY_TASK_ID}.txt " \
-                                                             "-k 1"
+        # -d database, -q query, -o output path, -k max hits saved per query seq in output file
+        # output format und e value vlt noch anpassen
+        blast_command = "/home/freya/bin/diamond blastx " \
+                        "-d /share/project/freya/NCBI/nrTaxonomy.dmnd " \
+                        "-q " + input_dir + "/temp_in_${SLURM_ARRAY_TASK_ID}.fasta " \
+                                            "-o " + output_dir + "/temp_out_${SLURM_ARRAY_TASK_ID}.txt " \
+                                                                 "-k 1"
 
-    slurm_file.write("#!/bin/bash\n\n"
-                     "#SBATCH --partition=all\n"
-                     "#SBATCH --account=praktikant\n"
-                     "#SBATCH --cpus-per-task=4\n"
-                     "#SBATCH --mem-per-cpu=8gb\n"
-                     "#SBATCH --job-name=\"jobarrayTest\"\n\n")
+        slurm_file.write("#!/bin/bash\n\n"
+                         "#SBATCH --partition=all\n"
+                         "#SBATCH --account=praktikant\n"
+                         "#SBATCH --cpus-per-task=4\n"
+                         "#SBATCH --mem-per-cpu=8gb\n"
+                         "#SBATCH --job-name=\"jobarrayTest\"\n\n")
 
-    slurm_file.write(blast_command)
-    slurm_file.close()
+        slurm_file.write(blast_command)
+        slurm_file.close()
 
-    # sending the job via slurm to the cluster
-    os.system(("sbatch --array=1-" + str(fasta_count) + slurm_filename))"""
+        # sending the job via slurm to the cluster
+        os.system(("sbatch --array=1-" + str(fasta_count) + slurm_filename))"""
     # sbatch --array=1-3 arraytestfile.slurm
-
+    return None
 
 def read_in_results(project_dir):
 
