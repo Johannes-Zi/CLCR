@@ -16,7 +16,7 @@ def database_comparison(list_with_scaffold_specific_low_cov_reg_lists, fna_file_
     :param list_with_scaffold_specific_low_cov_reg_lists: list consisting of scaffold specific sublists with tuples
                                                           containing the start and he end of a region for database
                                                           comparison (output of detect_regions, merge_regions or
-                                                          combine_regions_multiple_scaffolds)
+                                                          combine_regions_multiple_scaffolds).
     :param fna_file_path: path of the fna file for receiving the base sequence
     :param min_length: expanding the detected regions to 500 if they are smaller, for a better working on diamond
     :param query_dir: directory where the query files are stored in
