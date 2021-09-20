@@ -8,129 +8,167 @@ import glob
 import copy
 
 
-def database_comparison(input_list, fna_file, min_lenght, query_dir):
+def database_comparison(list_with_scaffold_specific_low_cov_reg_lists, fna_file_path, min_length, query_dir):
 
     """
-    This function creates the fasta query files for a diamond slurm job, out of a input list with the low coverage
-    regions and a path to the matching fna file to read out the sequences of the low coverage regions.
-    :param input_list: list with tuples containing the start and the end of a region for database comparison
-    :param fna_file: path of the fna file for receiving the base sequence
-    :param min_lenght: expanding the detected regions to 500 if they are smaller, for a better working on diamond
+    This function creates the .fasta query files for a diamond slurm job, out of a input list with the low coverage
+    regions of each and a path to the matching fna file to read out the sequences of the low coverage regions.
+    :param list_with_scaffold_specific_low_cov_reg_lists: list consisting of scaffold specific sublists with tuples
+                                                          containing the start and he end of a region for database
+                                                          comparison (output of detect_regions, merge_regions or
+                                                          combine_regions_multiple_scaffolds)
+    :param fna_file_path: path of the fna file for receiving the base sequence
+    :param min_length: expanding the detected regions to 500 if they are smaller, for a better working on diamond
     :param query_dir: directory where the query files are stored in
     :return no return
     """
 
-    # Reading in the  fna_file for fast access while creating the .fasta files
-    input_file = open(fna_file)
-    region_list_temp = []    # filled with the complete sequence for fast data access
+    # Read in the .fna file for fast access
+    input_fna_file = open(fna_file_path)
+    scaffold_list = []  # Filled with the sequences of the fna file
+    temp_scaffold = []  # Contains the current scaffold
+    current_header = ""  # Containing the header of the current scaffold
 
-    # filling the list
-    for line in input_file:
-        if line[0] != ">":
-            for x in line.strip():
-                region_list_temp.append(x)
-    input_file.close()
+    # Filling the .fna region list/ reading in the original assembly
+    for line in input_fna_file:
 
-    # creating the file path for input directory (cwd = current working directory of the process (.py file))
-    #query_dir = os.getcwd() + "/input_dir"
-    #os.mkdir(query_dir)         # creating the file for temporarily input directory
+        # Sequence line case
+        if (line[0] != ">") and (line[0] != ";"):
+            for x in line.strip():  # filling up a new sequence
+                temp_scaffold.append(x)
 
+        # Sequence header case
+        elif line[0] == ">":
+            scaffold_list.append([current_header, temp_scaffold])  # appending the previous region
+            current_header = line.strip().split()[0][1:]  # reading in the new header
+            temp_scaffold = []  # resetting the list/ ready for new region
+
+    # Append last remaining region
+    scaffold_list.append([current_header, temp_scaffold])
+    input_fna_file.close()
+    # Delete the first empty initialising element
+    scaffold_list.pop(0)
+
+    # Initialise some parameters
     seq_per_fasta = 5000     # number of sequences appended per .fasta file
-    current_tuple = 0   # saves the position of the current region tuple in input_list
     fasta_count = 1     # for individual naming at creating of the .fasta files
 
-    # creating the first fasta file
-    new_fasta = query_dir + "/" + "temp_in_" + str(fasta_count) + ".fasta"
-    current_fasta = open(new_fasta, "w")
+    # Creating the query files for all scaffolds, searching a the matching scaffold sequence for each
+    # current_low_cov_list with the low cov. regions of each scaffold
+    for scaffold in list_with_scaffold_specific_low_cov_reg_lists:
+        scaffold_name = scaffold[0]
+        current_low_cov_list = scaffold[1]
+        current_tuple = 0  # saves the position of the current region tuple in current_low_cov_list
 
-    # possible first cases where the region cant be expanded 150 to the left,
-    # because the (startposition(of the region) - 150) < 0
-    while (input_list[current_tuple][0] - int(min_lenght/2)) <= 0:
+        for current_scaffold in scaffold_list:
+            if scaffold_name == current_scaffold[0]:
 
-        # calculating the expand length
-        region_length = input_list[current_tuple][1] - input_list[current_tuple][0]
-        if region_length < min_lenght:
-            expand_left = expand_right = int((min_lenght - region_length) / 2)
-        else:
-            expand_left = expand_right = 0
+                # Creating the first fasta file of current loop run
+                new_fasta = query_dir + "/" + "temp_in_" + str(fasta_count) + ".fasta"
+                current_fasta = open(new_fasta, "w")
 
-        # case if the starting point is moved in the negative by expand_left
-        if (input_list[current_tuple][0] - expand_left) < 0:
-            region_start = 0
-            region_end = input_list[current_tuple][1] + expand_right + abs(input_list[current_tuple][0] - expand_left)
-        # normal case
-        else:
-            region_start = input_list[current_tuple][0] - expand_left
-            region_end = input_list[current_tuple][1] + expand_right
+                # Possible first cases where the region cant be expanded 150 to the left,
+                # because the (startposition(of the region) - 150) < 0
+                while (current_low_cov_list[current_tuple][0] - int(min_length / 2)) <= 0:
 
-        # writing the region in the fasta file
-        current_fasta.write((">" + str(input_list[current_tuple][0]) + "_" + str(input_list[current_tuple][1]) + "\n"))
-        current_fasta.write(("".join(region_list_temp[region_start:region_end]) + "\n"))
-        current_tuple += 1
+                    # Calculating the expand length
+                    region_length = current_low_cov_list[current_tuple][1] - current_low_cov_list[current_tuple][0]
+                    if region_length < min_length:
+                        expand_left = expand_right = int((min_length - region_length) / 2)
+                    else:
+                        expand_left = expand_right = 0
 
-        # break condition
-        if current_tuple >= len(input_list):
-            break
+                    # Case if the starting point is moved in the negative by expand_left
+                    if (current_low_cov_list[current_tuple][0] - expand_left) < 0:
+                        region_start = 0
+                        region_end = current_low_cov_list[current_tuple][1] + expand_right + \
+                                     abs(current_low_cov_list[current_tuple][0] - expand_left)
+                    # Normal case
+                    else:
+                        region_start = current_low_cov_list[current_tuple][0] - expand_left
+                        region_end = current_low_cov_list[current_tuple][1] + expand_right
 
-    break_value = False
-    # each while run fills up a new fasta file
-    while True:
-        for x in range(seq_per_fasta):
-            if (current_tuple >= len(input_list)) or \
-                    ((input_list[current_tuple][1]) > (len(region_list_temp) - int(min_lenght/2))):
-                break_value = True
-                break
-            current_fasta.write((">" + str(input_list[current_tuple][0]) + "_" + str(input_list[current_tuple][1])
-                                 + "\n"))
-            # calculation the length a region must be expanded
-            region_length = input_list[current_tuple][1] - input_list[current_tuple][0]
-            if region_length < min_lenght:
-                expand_len = int((min_lenght - region_length)/2)
-            else:
-                expand_len = 0
-            current_fasta.write("".join(region_list_temp[(input_list[current_tuple][0] - expand_len):
-                                                         (input_list[current_tuple][1] + expand_len)])
-                                + "\n")
-            current_tuple += 1
+                    # Writing the region in the fasta file
+                    current_fasta.write((">" + scaffold_name + "_" + str(current_low_cov_list[current_tuple][0]) +
+                                         "_" + str(current_low_cov_list[current_tuple][1]) + "\n"))
+                    current_fasta.write(("".join(current_scaffold[1][region_start:region_end]) + "\n"))
+                    current_tuple += 1
 
-        # break condition
-        if break_value:
-            break
+                    # Break condition
+                    if current_tuple >= len(current_low_cov_list):
+                        break
 
-        # creating .fasta file for the next run
-        fasta_count += 1
-        current_fasta.close()
-        new_fasta = query_dir + "/" + "temp_in_" + str(fasta_count) + ".fasta"
-        current_fasta = open(new_fasta, "w")
+                break_value = False
+                # Each while run fills up a new fasta file
+                while True:
+                    for x in range(seq_per_fasta):
 
-    # possible last cases where the region cant be expanded 150 to the right,
-    # because (the endposition(of the region) + 150) > sequence length
-    while current_tuple < len(input_list):
-        # calculating the expand length
-        region_length = input_list[current_tuple][1] - input_list[current_tuple][0]
-        if region_length < min_lenght:
-            expand_left = expand_right = int((min_lenght - region_length) / 2)
-        else:
-            expand_left = expand_right = 0
+                        # Break condition
+                        if (current_tuple >= len(current_low_cov_list)) or \
+                                ((current_low_cov_list[current_tuple][1]) >
+                                 (len(current_scaffold[1]) - int(min_length / 2))):
+                            break_value = True
+                            break
+                        current_fasta.write((">" + scaffold_name + "_" + str(current_low_cov_list[current_tuple][0]) +
+                                             "_" + str(current_low_cov_list[current_tuple][1]) + "\n"))
 
-        # case if the endpoint is moved behind the end of the region_list_temp by expand_right
-        if (input_list[current_tuple][1] + expand_right) > len(region_list_temp):
-            region_start = input_list[current_tuple][0] - expand_left - \
-                           ((input_list[current_tuple][1] + expand_right) - len(region_list_temp))
-            region_end = len(region_list_temp)
-        # normal case
-        else:
-            region_start = input_list[current_tuple][0] - expand_left
-            region_end = input_list[current_tuple][1] + expand_right
+                        # Calculation the length a region must be expanded
+                        region_length = current_low_cov_list[current_tuple][1] - \
+                                        current_low_cov_list[current_tuple][0]
 
-        # writing the region in the fasta file
-        current_fasta.write((">" + str(input_list[current_tuple][0]) + "_" + str(input_list[current_tuple][1]) + "\n"))
-        current_fasta.write(("".join(region_list_temp[region_start:region_end]) + "\n"))
-        current_tuple += 1
+                        if region_length < min_length:
+                            expand_len = int((min_length - region_length) / 2)
+                        else:
+                            expand_len = 0
+                        current_fasta.write("".join(current_scaffold[1]
+                                                    [(current_low_cov_list[current_tuple][0] - expand_len):
+                                                     (current_low_cov_list[current_tuple][1] + expand_len)])
+                                            + "\n")
+                        current_tuple += 1
 
-    current_fasta.close()
+                    # Break condition
+                    if break_value:
+                        break
 
-    print("created fasta files: ", fasta_count)
+                    # Creating .fasta file for the next run
+                    fasta_count += 1
+                    current_fasta.close()
+                    new_fasta = query_dir + "/" + "temp_in_" + str(fasta_count) + ".fasta"
+                    current_fasta = open(new_fasta, "w")
+
+                # Possible last cases where the region cant be expanded 150 to the right,
+                # because (the endposition(of the region) + 150) > sequence length
+                while current_tuple < len(current_low_cov_list):
+                    # Calculating the expand length
+                    region_length = current_low_cov_list[current_tuple][1] - current_low_cov_list[current_tuple][0]
+                    if region_length < min_length:
+                        expand_left = expand_right = int((min_length - region_length) / 2)
+                    else:
+                        expand_left = expand_right = 0
+
+                    # Case if the endpoint is moved behind the end of the current_scaffold by expand_right
+                    if (current_low_cov_list[current_tuple][1] + expand_right) > len(current_scaffold[1]):
+                        region_start = current_low_cov_list[current_tuple][0] - expand_left - \
+                                       ((current_low_cov_list[current_tuple][1] + expand_right) -
+                                        len(current_scaffold[1]))
+                        region_end = len(current_scaffold[1])
+                    # Normal case
+                    else:
+                        region_start = current_low_cov_list[current_tuple][0] - expand_left
+                        region_end = current_low_cov_list[current_tuple][1] + expand_right
+
+                    # Writing the region in the fasta file
+                    current_fasta.write((">" + scaffold_name + "_" + str(current_low_cov_list[current_tuple][0]) +
+                                         "_" + str(current_low_cov_list[current_tuple][1]) + "\n"))
+                    current_fasta.write(("".join(current_scaffold[1][region_start:region_end]) + "\n"))
+                    current_tuple += 1
+
+                current_fasta.close()
+                fasta_count += 1
+
+                break       # Break because there is only one matching scaffold sequence for each scaffold
+
+    print("Amount of created fasta files: ", fasta_count)
 
     return None
 
@@ -164,7 +202,7 @@ def create_slurmarry():
     return None
 
 
-def read_in_results(project_dir):
+def count_diamond_hits(project_dir):
 
     """
     simply count the amount of DIAMOND hits
@@ -192,7 +230,7 @@ def read_in_results(project_dir):
     return output_list
 
 
-def read_in_results_2(output_dir):
+def count_all_frameshifts_per_hit(output_dir):
 
     """
     this version is for the frameshift option, it counts the frameshifts per hit und adds several other information
