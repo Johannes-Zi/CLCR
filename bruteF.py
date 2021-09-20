@@ -1,4 +1,4 @@
-"""This program is the bruteforce version for detecting interesting regions"""
+"""This program is the bruteforce version for detecting low coverage regions in the per base coverage files"""
 __author__ = "6947325: Johannes Zieres"
 __credits__ = ""
 __email__ = "johannes.zieres@gmail.com"
@@ -109,21 +109,22 @@ def merge_close_reg(input_scaffold_list, merge_distance):
 def combine_regions(input_list_short, input_list_long):
 
     """
-    Searching for combined low coverage regions
+    Detecting combined low coverage regions, which means regions where the short read and long read coverage is below
+    the thresholds. Has to be called for each scaffold.
     :param input_list_short: list containing the short read low coverage regions
     :param input_list_long: list containing the long read low coverage regions
     :return: list which is containing the regions where both coverages are low
     """
 
-    combined_list = []      # for saving the created combined regions
+    combined_list = []      # For saving the created combined regions
 
-    # saving the current tuple positions in the lists
+    # Saving the current tuple positions in the lists
     short_list_pos = 0
     long_list_pos = 0
 
-    combined_region = False    # saves the new "combined regions", which are not already represented in the input lists
+    combined_region = False    # Saves the new "combined regions", which are not already represented in the input lists
 
-    # set starting point
+    # Set starting point
     if input_list_short[0][0] <= input_list_long[0][0]:
         startpoint = input_list_short[0][0]
         active_region = "S"     # for short
@@ -131,7 +132,7 @@ def combine_regions(input_list_short, input_list_long):
         startpoint = input_list_long[0][0]
         active_region = "L"  # for long
 
-    # goes gradually through the regions, for each active region (short or long) the while-loop consideres if the region
+    # Goes gradually through the regions, for each active region (short or long) the while-loop considers if the region
     # could be expanded by a region from the other input_list. If a region is expanded the "combined_region" is set TRUE
     # and if the regions could not be extended more the starting point of the region and the current end is appended in
     # combined_list.
@@ -233,6 +234,34 @@ def combine_regions(input_list_short, input_list_long):
             combined_list.append((startpoint, input_list_long[long_list_pos][1]))
         else:
             combined_list.append((startpoint, input_list_short[short_list_pos][1]))
+
+    return combined_list
+
+
+def combine_regions_multiple_scaffolds(input_scaffold_list_short, input_scaffold_list_long):
+    """
+    Searches the matching scaffold_list pairs with the short and long read low coverage regions of each scaffold. Calls
+    the combine region for each  scaffold pair.
+    :param input_scaffold_list_short: output list of detect_regions or merge_close regions with the short read low cov.
+                                      regions
+    :param input_scaffold_list_long: output list of detect_regions or merge_close regions with the long read low cov.
+                                      regions
+    :return: Combined list with sublists that contain the combined low cov. regions of each scaffold
+    """
+
+    combined_list = []      # Contains the scaffold lists with all combined low cov. regions of each scaffold
+
+    # Search the matching long read scaffold_list for each short read scaffold_list, if possible
+    for scaffold_list_short in input_scaffold_list_short:
+
+        for scaffold_list_long in input_scaffold_list_long:
+
+            # Case where the matching scaffold was found
+            if scaffold_list_short[0] == scaffold_list_long[0]:
+
+                combined_list.append([scaffold_list_short[0],
+                                      combine_regions(scaffold_list_short[1], scaffold_list_long[1])])
+            break
 
     return combined_list
 
