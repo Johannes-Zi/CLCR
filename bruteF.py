@@ -6,67 +6,102 @@ __email__ = "johannes.zieres@gmail.com"
 
 def detect_regions(cov_file_path, cov_start, cov_end):
     """
-    Detecting the low coverage reions
+    Detecting the low coverage regions in the per base coverage file. Saves for each low coverage region the scaffold
+    and the start and end position in the scaffold. Low cov. regions that are spanning two scaffolds are excluded.
     :param cov_file_path: path of input coverage file
     :param cov_start: threshold for detecting a low coverage area
     :param cov_end: threshold for leaving a low coverage area
     :return: list with the low coverage regions
     """
 
-    import_file = open(cov_file_path)  # opens the coverage file
-    current_position = 0  # saves the current position
-    low_cov = False  # saves the current coverage situation
-    low_cov_regions = []  # low coverage regions List with tuple like (start low cov. area, end of low cov. area)
-    region_start = int  # saves the start point for a low coverage region
+    import_file = open(cov_file_path)  # Opens the coverage file
+    current_position = 0  # Saves the current position
+    low_cov = False  # Saves the current coverage situation
+    low_cov_regions = []  # Low coverage regions List with the current_scaffold list of each scaffold
+    region_start = int  # Saves the start point for a low coverage region
 
-    # detects the low coverage regions and saves them in low_coverage_regions list
+    # Saves the scaffold of the first low cov position of the current low coverage region
+    start_scaffold = str    # Parameter is for excluding low cov. regions that are spanning multiple scaffolds
+    current_scaffold = ["scaffoldname", []]    # Saves the name of the scaffold and all low cov. regions in them.
+
+    # Detects the low coverage regions and saves them in low_coverage_regions list
     for line in import_file:
-        temp_split1 = line.split()
+        splitted_line = line.split()
+
+        # New scaffold starts, old scaffold information is appended to the final output list
+        if splitted_line[0] != current_scaffold[0]:
+            low_cov_regions.append(current_scaffold)    # Appends the old scaffold to the final output list
+            current_scaffold = [splitted_line[0], []]   # Resets the list and initialise the List for the new scaffold
+            current_position = 0    # Resets the current position to 0, because a new sacffold starts
 
         if low_cov:  # Case for being in a low coverage region
-            if int(temp_split1[2]) > cov_end:
+            if int(splitted_line[2]) > cov_end:     # Checks if the low cov. region ends
                 low_cov = False
-                low_cov_regions.append((region_start, (current_position - 1)))
+
+                # Checks that the start and end position of the low cov. regions lays in the same scaffold
+                if current_scaffold[0] == start_scaffold:
+                    current_scaffold[1].append((region_start, (current_position - 1)))
 
         else:  # Case for being in a good coverage region
-            if int(temp_split1[2]) <= cov_start:
+            if int(splitted_line[2]) <= cov_start:      # Checks if a new low cov. region starts
                 low_cov = True
-                region_start = current_position
+                region_start = current_position     # Saves the start position of the current low cov. region
+                start_scaffold = splitted_line[0]   # Saves the scaffold of the start position
 
         current_position += 1
 
-    import_file.close()  # closes the input file
+    import_file.close()  # Closes the input file
+
+    low_cov_regions.append(current_scaffold)    # Appends the last remaining scaffold
+    low_cov_regions.pop(0)      # Removes the initialising object
 
     return low_cov_regions
 
 
-def merge_close_reg(input_list, merge_distance):
+def merge_close_reg(input_scaffold_list, merge_distance):
 
     """
-    Merging close regions together
-    :param input_list: input list, which is containing the low coverage regions
+    Receives the output list of the detect regions function and merges all low cov. regions in each scaffold together if
+    the are closer together than the given merge_distance parameter.
+    :param input_scaffold_list: input list, which is containing the scaffold lists with the low coverage regions
     :param merge_distance: distance threshold, for merging regions which are closer together than the threshold
     :return: region list with the merged regions
     """
 
-    output_list = []
-    current_start = int
+    output_list = []    # Contains the modified scaffold lists with low cov. regions of each scaffold
 
-    current_start = input_list[0][0]    # initialising value
+    # Iterates trough the scaffolds
+    for scaffold_list in input_scaffold_list:
 
-    # merging regions
-    for x in range(len(input_list)-1):
-        if (input_list[x][1] + merge_distance) < input_list[x+1][0]:
-            output_list.append((current_start, input_list[x][1]))
-            current_start = input_list[x+1][0]
+        new_scaffold_list = [scaffold_list[0], []]      # Saves the new merged low cov. regions
 
-    # append last region
-    # case if the next to last must be merged with the last region and appended
-    if (input_list[(len(input_list)-2)][1] + merge_distance) >= input_list[len(input_list)-1][0]:
-        output_list.append((current_start, input_list[len(input_list)-1][1]))
-    # case for appending a unattached last region
-    else:
-        output_list.append((input_list[len(input_list)-1][0], input_list[len(input_list)-1][1]))
+        # Initialising the parameters with the first low cov region
+        current_start = scaffold_list[1][0][0]
+        current_end = scaffold_list[1][0][1]
+
+        # Merging the regions of the current scaffold
+        for low_cov_reg in scaffold_list[1]:
+
+            # Case in which the start position of the current region ist closer to the end position of the previous
+            # region than the merge distance, so those two regions must be merged
+            if (low_cov_reg[0] - merge_distance) < current_end:
+                current_end = low_cov_reg[1]
+
+            # Case where the current region don't have to be merged with the previous region, which means no following
+            # region has to be merged with the previous either. So the previous region is complete and could be appended
+            # to the scaffold list
+            else:
+                new_scaffold_list.append((current_start, current_end))
+
+                # Reset the parameters and initialise them with the new low cov. region
+                current_start = low_cov_reg[0]
+                current_end = low_cov_reg[1]
+
+        # Append the last region
+        new_scaffold_list.append((current_start, current_end))
+
+        # Append the final scaffold list to the output list
+        output_list.append(new_scaffold_list)
 
     return output_list
 
