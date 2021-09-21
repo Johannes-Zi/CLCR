@@ -7,7 +7,9 @@ __email__ = "johannes.zieres@gmail.com"
 def detect_regions(cov_file_path, cov_start, cov_end):
     """
     Detecting the low coverage regions in the per base coverage file. Saves for each low coverage region the scaffold
-    and the start and end position in the scaffold. Low cov. regions that are spanning two scaffolds are excluded.
+    and the start and end position in the scaffold. Low cov. regions that are spanning two or more scaffolds are
+    excluded. Returns the low cov regions as python list positions(-1). A low cov. region is detected when the cov. is
+    equal or lower than cov_start. And a low cov. region is ended when the coverage is higher than cov_end.
     :param cov_file_path: path of input coverage file
     :param cov_start: threshold for detecting a low coverage area
     :param cov_end: threshold for leaving a low coverage area
@@ -84,21 +86,21 @@ def merge_close_reg(input_scaffold_list, merge_distance):
 
             # Case in which the start position of the current region ist closer to the end position of the previous
             # region than the merge distance, so those two regions must be merged
-            if (low_cov_reg[0] - merge_distance) < current_end:
+            if (low_cov_reg[0] - merge_distance) <= current_end:
                 current_end = low_cov_reg[1]
 
             # Case where the current region don't have to be merged with the previous region, which means no following
             # region has to be merged with the previous either. So the previous region is complete and could be appended
             # to the scaffold list
             else:
-                new_scaffold_list.append((current_start, current_end))
+                new_scaffold_list[1].append((current_start, current_end))
 
                 # Reset the parameters and initialise them with the new low cov. region
                 current_start = low_cov_reg[0]
                 current_end = low_cov_reg[1]
 
         # Append the last region
-        new_scaffold_list.append((current_start, current_end))
+        new_scaffold_list[1].append((current_start, current_end))
 
         # Append the final scaffold list to the output list
         output_list.append(new_scaffold_list)
@@ -261,7 +263,7 @@ def combine_regions_multiple_scaffolds(input_scaffold_list_short, input_scaffold
 
                 combined_list.append([scaffold_list_short[0],
                                       combine_regions(scaffold_list_short[1], scaffold_list_long[1])])
-            break
+                break
 
     return combined_list
 
