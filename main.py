@@ -22,7 +22,7 @@ def main():
     long_low_cov_regions = bruteF.detect_regions(long_read_coverage_file, 25, 30)
     long_low_cov_regions = bruteF.merge_close_reg(long_low_cov_regions, 250)
 
-    # Determine combined low cov. regions
+    # Determine combined low cov. regions:
     combined_low_cov_regions = bruteF.combine_regions(short_low_cov_regions, long_low_cov_regions)
 
     assembly_file = "/share/gluster/assemblies/Tdraco/" \
