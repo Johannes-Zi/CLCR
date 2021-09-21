@@ -29,15 +29,15 @@ def main():
                     "t_draco_pacbio_salsa.FINAL_gap_closed.scaff_seqs_FINAL_pilon_2.fasta"
     # Create short read low cov. queries
     short_read_query_dir = "/home/johannes/Desktop/trachinus_draco/short_read_queries/"
-    compD.database_comparison(short_low_cov_regions, assembly_file, 500, short_read_query_dir)
+    compD.database_comparison(short_low_cov_regions, assembly_file, 500, short_read_query_dir, 5000)
 
     # Create long read low cov. queries
     long_read_query_dir = "/home/johannes/Desktop/trachinus_draco/long_read_queries/"
-    compD.database_comparison(long_low_cov_regions, assembly_file, 500, long_read_query_dir)
+    compD.database_comparison(long_low_cov_regions, assembly_file, 500, long_read_query_dir, 5000)
 
     # Create combined low cov. queries
     combined_query_dir = "/home/johannes/Desktop/trachinus_draco/combined_queries/"
-    compD.database_comparison(combined_low_cov_regions, assembly_file, 500, combined_query_dir)
+    compD.database_comparison(combined_low_cov_regions, assembly_file, 500, combined_query_dir, 5000)
 
 
 if __name__ == '__main__':
