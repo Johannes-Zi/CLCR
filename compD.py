@@ -8,11 +8,13 @@ import glob
 import copy
 
 
-def database_comparison(list_with_scaffold_specific_low_cov_reg_lists, fna_file_path, min_length, query_dir):
+def database_comparison(list_with_scaffold_specific_low_cov_reg_lists, fna_file_path, min_length, query_dir,
+                        seq_per_fasta):
 
     """
     This function creates the .fasta query files for a diamond slurm job, out of a input list with the low coverage
     regions of each and a path to the matching fna file to read out the sequences of the low coverage regions.
+    The saved positions of the queries in each scaffold are the normal positions, not python list positions(-1) !!!
     :param list_with_scaffold_specific_low_cov_reg_lists: list consisting of scaffold specific sublists with tuples
                                                           containing the start and he end of a region for database
                                                           comparison (output of detect_regions, merge_regions or
@@ -20,6 +22,8 @@ def database_comparison(list_with_scaffold_specific_low_cov_reg_lists, fna_file_
     :param fna_file_path: path of the fna file for receiving the base sequence
     :param min_length: expanding the detected regions to 500 if they are smaller, for a better working on diamond
     :param query_dir: directory where the query files are stored in
+    :param seq_per_fasta: max amount of queries stored per fasta, The fisrt and the last file could contain in special
+                          cases more queries
     :return no return
     """
 
@@ -50,7 +54,6 @@ def database_comparison(list_with_scaffold_specific_low_cov_reg_lists, fna_file_
     scaffold_list.pop(0)
 
     # Initialise some parameters
-    seq_per_fasta = 5000     # number of sequences appended per .fasta file
     fasta_count = 1     # for individual naming at creating of the .fasta files
 
     # Creating the query files for all scaffolds, searching a the matching scaffold sequence for each
@@ -89,8 +92,8 @@ def database_comparison(list_with_scaffold_specific_low_cov_reg_lists, fna_file_
                         region_end = current_low_cov_list[current_tuple][1] + expand_right
 
                     # Writing the region in the fasta file
-                    current_fasta.write((">" + scaffold_name + "_" + str(current_low_cov_list[current_tuple][0]) +
-                                         "_" + str(current_low_cov_list[current_tuple][1]) + "\n"))
+                    current_fasta.write((">" + scaffold_name + "#" + str(current_low_cov_list[current_tuple][0]) +
+                                         "#" + str(current_low_cov_list[current_tuple][1]) + "\n"))
                     current_fasta.write(("".join(current_scaffold[1][region_start:region_end]) + "\n"))
                     current_tuple += 1
 
@@ -109,8 +112,8 @@ def database_comparison(list_with_scaffold_specific_low_cov_reg_lists, fna_file_
                                  (len(current_scaffold[1]) - int(min_length / 2))):
                             break_value = True
                             break
-                        current_fasta.write((">" + scaffold_name + "_" + str(current_low_cov_list[current_tuple][0]) +
-                                             "_" + str(current_low_cov_list[current_tuple][1]) + "\n"))
+                        current_fasta.write((">" + scaffold_name + "#" + str(current_low_cov_list[current_tuple][0]) +
+                                             "#" + str(current_low_cov_list[current_tuple][1]) + "\n"))
 
                         # Calculation the length a region must be expanded
                         region_length = current_low_cov_list[current_tuple][1] - \
@@ -158,8 +161,8 @@ def database_comparison(list_with_scaffold_specific_low_cov_reg_lists, fna_file_
                         region_end = current_low_cov_list[current_tuple][1] + expand_right
 
                     # Writing the region in the fasta file
-                    current_fasta.write((">" + scaffold_name + "_" + str(current_low_cov_list[current_tuple][0]) +
-                                         "_" + str(current_low_cov_list[current_tuple][1]) + "\n"))
+                    current_fasta.write((">" + scaffold_name + "#" + str(current_low_cov_list[current_tuple][0]) +
+                                         "#" + str(current_low_cov_list[current_tuple][1]) + "\n"))
                     current_fasta.write(("".join(current_scaffold[1][region_start:region_end]) + "\n"))
                     current_tuple += 1
 
@@ -1531,45 +1534,6 @@ def transform_txt_to_gff(txt_file_path):
 
 def main():
     print("database comparison main executed")
-
-    x = "C:/Users/19joh/Desktop/testordner/"
-    x1, x2 = read_in_results_3(x)
-
-    print("##############################################\n"
-          "##############################################")
-    for z1 in x1:
-        print(z1)
-    print("##############################################\n"
-          "##############################################")
-    for z2 in x2:
-        print(z2)
-
-    """fna_path = "C:/Users/19joh/Desktop/heal_assembly_file_testdata/unmod.fna"
-    temp_list = [["scaffold1", 0, 20, [[0, "D"], [79, "I"]]],
-                 ["scaffold2", 0, 20, [[0, "D"]]], ["scaffold2", 80, 20, [[0, "D"]]],
-                 ["scaffold2", 160, 20, [[0, "D"]]], ["scaffold2", 240, 20, [[0, "D"], [69, "I"] , [80, "I"]]],
-                 ["scaffold3", 0, 20, [[0, "D"], [69, "I"]]]]
-    heal_assembly_file(temp_list, fna_path)"""
-
-    """temp_list_1 = [["scaffold1", 0, 20, [[79, "I"], [0, "D"], [20, "I"], [5, "D"]]],
-                   ["scaffold2", 0, 20, [[10, "D"], [3, "I"], [15, "D"]]],
-                   ["scaffold2", 80, 90, [[3, "I"], [0, "D"], [8, "D"]]],
-                   ["scaffold2", 160, 200, [[40, "I"], [30, "D"], [25, "I"], [0, "D"]]],
-                   ["scaffold2", 240, 320, [[0, "D"], [20, "I"], [30, "I"]]],
-                   ["scaffold3", 0, 20, [[0, "D"], [69, "I"]]]]
-    temp_list_2 = create_gff_adaption_list(temp_list_1)
-    print(temp_list_2)"""
-
-    """adaption_list = [['scaffold_1', [[20, 2], [30, 3], [60, 5], [80, 6], [130, 8], [150, 9]]],
-                     ['scaffold_2', [[20, 2], [30, 3], [60, 5], [80, 6], [130, 8], [150, 9]]],
-                     ['scaffold_3', [[20, 2], [30, 3], [60, 5], [80, 6], [130, 8], [150, 9]]],
-                     ['scaffold_4', [[20, 2], [30, 3], [60, 5], [80, 6], [130, 8], [150, 9]]],
-                     ['scaffold_5', [[10, 1]]],
-                     ['scaffold_6', [[50, 1]]],
-                     ['scaffold_7', []]]
-    gff_file_path = "C:/Users/19joh/Desktop/test_annotation.gff"
-
-    adapt_gff_file(gff_file_path, adaption_list)"""
 
 
 if __name__ == '__main__':
