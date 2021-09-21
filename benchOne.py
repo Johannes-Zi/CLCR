@@ -409,7 +409,7 @@ def database_comp_exonerate_ins(cds_list, protein_file_path):
 
 def database_comp_diamond_del(query_list, protein_database):
     """
-    (create frameshift with deletion version)
+     (create frameshift with deletion version)
     Receives a query list, which is containing all CDS region, which are used for the benchmark, and the link to the
     diamond database for the diamond blastx runs. The frameshifts are inserted as deletion like in the
     database_comp_exonerate function.

@@ -230,7 +230,7 @@ def create_mod_queries_new(input_cds_file_path, min_query_len, max_query_len):
     frameshift over the position in the query and over the position of the query in the complete sequence, falls out.
     So the queries start positions in the complete sequences are always 0.
     In summary two files are created, the one with the modified querys(with frameshifts) and the file with the
-    unmodified queries, which are used as reference
+    unmodified queries, which are used as reference.
 
     :param input_cds_file_path: Path to the input file with all CDS regions of the main benchmark organism
     :param min_query_len: minimal query length
