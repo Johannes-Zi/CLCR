@@ -778,6 +778,7 @@ def read_in_results_3_detect(output_dir):
     :param output_dir: path to the output directory
     :return: output_region_list, healing_region_list
     """
+
     # Returns every file in the directory with .out at the end
     output_file_list = glob.glob(output_dir + "/temp_out_*.txt")
 
@@ -1026,13 +1027,13 @@ def read_in_results_3_detect(output_dir):
                     region_overlapping = True       # overlapping region found
                     break
 
-            # Case were no preivious region is overlapping with the current region
+            # Case were no previous region is overlapping with the current region
             if not region_overlapping:
                 # Append the new region to the coverage list
                 current_query_region_coverage.append([alignment_start_pos, alignment_end_pos])
                 current_query[3] += diamond_hit[7]      # add the frameshifts of the new hit to final list
 
-        # Remove the unnecesseary start and end positions of the aligment in the output
+        # Remove the unnecessary start and end positions of the alignment in the output
         diamond_hit.pop(9)
         diamond_hit.pop(8)
 

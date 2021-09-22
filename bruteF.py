@@ -33,7 +33,7 @@ def detect_regions(cov_file_path, cov_start, cov_end):
         # New scaffold starts, old scaffold information is appended to the final output list
         if splitted_line[0] != current_scaffold[0]:
             low_cov_regions.append(current_scaffold)    # Appends the old scaffold to the final output list
-            current_scaffold = [splitted_line[0], []]   # Resets the list and initialise the List for the new scaffold
+            current_scaffold = [splitted_line[0][1:], []]   # Resets the list and initialise the List for the new scaffold
             current_position = 0    # Resets the current position to 0, because a new sacffold starts
 
         if low_cov:  # Case for being in a low coverage region

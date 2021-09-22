@@ -494,7 +494,7 @@ def read_in_results_3(output_dir):
 
         # Initialising the parameters
         query_hit_list = []    # Contains all hit of the current query
-        current_region = ()  # Scaffold, start and end position of the current considered region
+        current_region = ("testscaffold", 0, 0)  # Scaffold, start and end position of the current considered region
         frameshift_list = []  # Contains the positions of detected frameshifts
         query_alignment = ""
         # The following two parameters are important for the localising of the frameshift in the scaffold, and the later
@@ -537,6 +537,7 @@ def read_in_results_3(output_dir):
 
                         # The placed gaps in the query in the alignment are counted for a correct position calculation
                         query_gap_count = 0
+
                         # Detect frameshifts in aligned query region
                         for query_pos, char in enumerate(current_protein_hit[4]):
 
@@ -581,7 +582,7 @@ def read_in_results_3(output_dir):
                     query_hit_list = []
 
                 # Setting the new region
-                current_line = line.strip().split()[1].split("_")
+                current_line = line.strip().split()[1].split("#")
                 current_region = (current_line[0], current_line[1], current_line[2])
 
             # Line containing the protein id
@@ -638,6 +639,7 @@ def read_in_results_3(output_dir):
 
                 # The placed gaps in the query in the alignment are counted for a correct position calculation
                 query_gap_count = 0
+
                 # Detect frameshifts in aligned query region
                 for query_pos, char in enumerate(current_protein_hit[4]):
 
@@ -716,7 +718,7 @@ def read_in_results_3(output_dir):
                 current_query_region_coverage.append([alignment_start_pos, alignment_end_pos])
                 current_query[3] += diamond_hit[7]      # add the frameshifts of the new hit to final list
 
-        # Remove the unnecessary start and end positions of the aligment in the output
+        # Remove the unnecessary start and end positions of the alignment in the output
         diamond_hit.pop(9)
         diamond_hit.pop(8)
 
