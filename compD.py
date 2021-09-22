@@ -176,32 +176,38 @@ def database_comparison(list_with_scaffold_specific_low_cov_reg_lists, fna_file_
     return None
 
 
-def create_slurmarry():
-    """# creating the .slurm file for the jobarray
-        slurm_filename = os.getcwd() + "/" + "temp_" + dir_name + ".slurm"
-        slurm_file = open(slurm_filename, "w")
+def create_slurmarry(input_dir, output_dir):
+    """
+    Simply creates the slurmarray file for a given input and output directory
+    :param input_dir: trivial
+    :param output_dir: trivial
+    :return: CLCR_slurmarray.slurm file at the cwd
+    """
 
-        # -d database, -q query, -o output path, -k max hits saved per query seq in output file
-        # output format und e value vlt noch anpassen
-        blast_command = "/home/freya/bin/diamond blastx " \
-                        "-d /share/project/freya/NCBI/nrTaxonomy.dmnd " \
-                        "-q " + input_dir + "/temp_in_${SLURM_ARRAY_TASK_ID}.fasta " \
-                                            "-o " + output_dir + "/temp_out_${SLURM_ARRAY_TASK_ID}.txt " \
-                                                                 "-k 1"
+    # creating the .slurm file for the jobarray
+    slurm_filename = os.getcwd() + "/" + "CLCR_slurmarray.slurm"
+    slurm_file = open(slurm_filename, "w")
 
-        slurm_file.write("#!/bin/bash\n\n"
-                         "#SBATCH --partition=all\n"
-                         "#SBATCH --account=praktikant\n"
-                         "#SBATCH --cpus-per-task=4\n"
-                         "#SBATCH --mem-per-cpu=8gb\n"
-                         "#SBATCH --job-name=\"jobarrayTest\"\n\n")
+    # -d database, -q query, -o output path, -k max hits saved per query seq in output file
+    blast_command = "diamond blastx -d /home/johannes/Desktop/trachinus_draco/protein_db/protein_db.dmnd " \
+                    "-q " + input_dir + "/temp_in_${SLURM_ARRAY_TASK_ID}.fasta " \
+                    "-o " + output_dir + "/temp_out_${SLURM_ARRAY_TASK_ID}.txt " \
+                    "-k 25 --max-hsps 0 -c 1 -t /dev/shm -F 15 -f 0"
 
-        slurm_file.write(blast_command)
-        slurm_file.close()
+    slurm_file.write("#!/bin/bash\n\n"
+                     "#SBATCH --partition=all\n"
+                     "#SBATCH --account=praktikant\n"
+                     "#SBATCH --cpus-per-task=4\n"
+                     "#SBATCH --mem-per-cpu=16gb\n"
+                     "#SBATCH --job-name=\"CLCR_run\"\n\n")
 
-        # sending the job via slurm to the cluster
-        os.system(("sbatch --array=1-" + str(fasta_count) + slurm_filename))"""
+    slurm_file.write(blast_command)
+    slurm_file.close()
+
+    # sending the job via slurm to the cluster
+    #os.system(("sbatch --array=1-" + str(fasta_count) + slurm_filename))
     # sbatch --array=1-3 arraytestfile.slurm
+
     return None
 
 
@@ -583,7 +589,7 @@ def read_in_results_3(output_dir):
 
                 # Setting the new region
                 current_line = line.strip().split()[1].split("#")
-                current_region = (current_line[0], current_line[1], current_line[2])
+                current_region = (current_line[0][1:], current_line[1], current_line[2])
 
             # Line containing the protein id
             if line.startswith(">"):
