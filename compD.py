@@ -53,11 +53,14 @@ def database_comparison(list_with_scaffold_specific_low_cov_reg_lists, fna_file_
     # Delete the first empty initialising element
     scaffold_list.pop(0)
 
-    print(scaffold_list[0][0], scaffold_list[1][0])
-    count_added_queries = 0
-
     # Initialise some parameters
-    fasta_count = 1     # for individual naming at creating of the .fasta files
+    fasta_count = 0     # for individual naming at creating of the .fasta files
+    count_added_queries = 0     # Counts how many queries are created overall
+    already_added_queries = 0   # Counts how many queries are already added to the fasta file
+
+    # Creating the first fasta file
+    new_fasta = query_dir + "/" + "temp_in_" + str(fasta_count) + ".fasta"
+    current_fasta = open(new_fasta, "w")
 
     # Creating the query files for all scaffolds, searching a the matching scaffold sequence for each
     # current_low_cov_list with the low cov. regions of each scaffold
@@ -69,11 +72,7 @@ def database_comparison(list_with_scaffold_specific_low_cov_reg_lists, fna_file_
         for current_scaffold in scaffold_list:
             if scaffold_name == current_scaffold[0]:
 
-                # Creating the first fasta file of current loop run
-                new_fasta = query_dir + "/" + "temp_in_" + str(fasta_count) + ".fasta"
-                current_fasta = open(new_fasta, "w")
-
-                # Possible first cases where the region cant be expanded 150 to the left,
+                # Possible first cases where the region cant be expanded 250 to the left,
                 # because the (startposition(of the region) - 150) < 0
                 while (current_low_cov_list[current_tuple][0] - int(min_length / 2)) <= 0:
 
@@ -100,6 +99,7 @@ def database_comparison(list_with_scaffold_specific_low_cov_reg_lists, fna_file_
                     current_fasta.write(("".join(current_scaffold[1][region_start:region_end]) + "\n"))
                     current_tuple += 1
                     count_added_queries += 1
+                    already_added_queries += 1
 
                     # Break condition
                     if current_tuple >= len(current_low_cov_list):
@@ -108,41 +108,48 @@ def database_comparison(list_with_scaffold_specific_low_cov_reg_lists, fna_file_
                 break_value = False
                 # Each while run fills up a new fasta file
                 while True:
-                    for x in range(seq_per_fasta):
 
-                        # Break condition
-                        if (current_tuple >= len(current_low_cov_list)) or \
-                                ((current_low_cov_list[current_tuple][1]) >
-                                 (len(current_scaffold[1]) - int(min_length / 2))):
-                            break_value = True
-                            break
-                        current_fasta.write((">" + scaffold_name + "#" + str(current_low_cov_list[current_tuple][0]) +
-                                             "#" + str(current_low_cov_list[current_tuple][1]) + "\n"))
+                    # Break condition
+                    if (current_tuple >= len(current_low_cov_list)) or \
+                            ((current_low_cov_list[current_tuple][1]) >
+                             (len(current_scaffold[1]) - int(min_length / 2))):
+                        break_value = True
+                        break
 
-                        # Calculation the length a region must be expanded
-                        region_length = current_low_cov_list[current_tuple][1] - \
-                                        current_low_cov_list[current_tuple][0]
+                    # Writes the header
+                    current_fasta.write((">" + scaffold_name + "#" + str(current_low_cov_list[current_tuple][0]) +
+                                         "#" + str(current_low_cov_list[current_tuple][1]) + "\n"))
 
-                        if region_length < min_length:
-                            expand_len = int((min_length - region_length) / 2)
-                        else:
-                            expand_len = 0
-                        current_fasta.write("".join(current_scaffold[1]
-                                                    [(current_low_cov_list[current_tuple][0] - expand_len):
-                                                     (current_low_cov_list[current_tuple][1] + expand_len)])
-                                            + "\n")
-                        current_tuple += 1
-                        count_added_queries += 1
+                    # Calculation the length a region must be expanded
+                    region_length = current_low_cov_list[current_tuple][1] - current_low_cov_list[current_tuple][0]
+
+                    if region_length < min_length:
+                        expand_len = int((min_length - region_length) / 2)
+                    else:
+                        expand_len = 0
+
+                    # Write the query sequence in the file
+                    current_fasta.write("".join(current_scaffold[1]
+                                                [(current_low_cov_list[current_tuple][0] - expand_len):
+                                                 (current_low_cov_list[current_tuple][1] + expand_len)])
+                                        + "\n")
+
+                    # Update parameters
+                    current_tuple += 1
+                    count_added_queries += 1
+                    already_added_queries += 1
 
                     # Break condition
                     if break_value:
                         break
 
-                    # Creating .fasta file for the next run
-                    fasta_count += 1
-                    current_fasta.close()
-                    new_fasta = query_dir + "/" + "temp_in_" + str(fasta_count) + ".fasta"
-                    current_fasta = open(new_fasta, "w")
+                    # Creating .fasta file, if the current file is full (defined by seq_per_fasta)
+                    if already_added_queries >= seq_per_fasta:
+                        fasta_count += 1
+                        current_fasta.close()
+                        already_added_queries = 0
+                        new_fasta = query_dir + "/" + "temp_in_" + str(fasta_count) + ".fasta"
+                        current_fasta = open(new_fasta, "w")
 
                 # Possible last cases where the region cant be expanded 150 to the right,
                 # because (the endposition(of the region) + 150) > sequence length
@@ -172,11 +179,13 @@ def database_comparison(list_with_scaffold_specific_low_cov_reg_lists, fna_file_
                     current_tuple += 1
                     count_added_queries += 1
 
-                current_fasta.close()
-                fasta_count += 1
-
                 break       # Break because there is only one matching scaffold sequence for each scaffold
 
+    # Close the last .fasta file
+    current_fasta.close()
+    fasta_count += 1
+
+    # User information
     print("Amount of created fasta files: ", fasta_count)
     print("Amount of created queries: ", count_added_queries)
 
