@@ -53,6 +53,9 @@ def database_comparison(list_with_scaffold_specific_low_cov_reg_lists, fna_file_
     # Delete the first empty initialising element
     scaffold_list.pop(0)
 
+    print(scaffold_list[0][0], scaffold_list[1][0])
+    count_added_queries = 0
+
     # Initialise some parameters
     fasta_count = 1     # for individual naming at creating of the .fasta files
 
@@ -96,6 +99,7 @@ def database_comparison(list_with_scaffold_specific_low_cov_reg_lists, fna_file_
                                          "#" + str(current_low_cov_list[current_tuple][1]) + "\n"))
                     current_fasta.write(("".join(current_scaffold[1][region_start:region_end]) + "\n"))
                     current_tuple += 1
+                    count_added_queries += 1
 
                     # Break condition
                     if current_tuple >= len(current_low_cov_list):
@@ -128,6 +132,7 @@ def database_comparison(list_with_scaffold_specific_low_cov_reg_lists, fna_file_
                                                      (current_low_cov_list[current_tuple][1] + expand_len)])
                                             + "\n")
                         current_tuple += 1
+                        count_added_queries += 1
 
                     # Break condition
                     if break_value:
@@ -165,6 +170,7 @@ def database_comparison(list_with_scaffold_specific_low_cov_reg_lists, fna_file_
                                          "#" + str(current_low_cov_list[current_tuple][1]) + "\n"))
                     current_fasta.write(("".join(current_scaffold[1][region_start:region_end]) + "\n"))
                     current_tuple += 1
+                    count_added_queries += 1
 
                 current_fasta.close()
                 fasta_count += 1
@@ -172,6 +178,7 @@ def database_comparison(list_with_scaffold_specific_low_cov_reg_lists, fna_file_
                 break       # Break because there is only one matching scaffold sequence for each scaffold
 
     print("Amount of created fasta files: ", fasta_count)
+    print("Amount of created queries: ", count_added_queries)
 
     return None
 

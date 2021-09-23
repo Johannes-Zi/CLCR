@@ -24,7 +24,7 @@ def detect_regions(cov_file_path, cov_start, cov_end):
 
     # Saves the scaffold of the first low cov position of the current low coverage region
     start_scaffold = str    # Parameter is for excluding low cov. regions that are spanning multiple scaffolds
-    current_scaffold = ["scaffoldname", []]    # Saves the name of the scaffold and all low cov. regions in them.
+    current_scaffold = ["scaffoldname", [(0, 10)]]    # Saves the name of the scaffold and all low cov. regions in them.
 
     # Detects the low coverage regions and saves them in low_coverage_regions list
     for line in import_file:
@@ -32,9 +32,13 @@ def detect_regions(cov_file_path, cov_start, cov_end):
 
         # New scaffold starts, old scaffold information is appended to the final output list
         if splitted_line[0] != current_scaffold[0]:
-            low_cov_regions.append(current_scaffold)    # Appends the old scaffold to the final output list
-            current_scaffold = [splitted_line[0][1:], []]   # Resets the list and initialise the List for the new scaffold
-            current_position = 0    # Resets the current position to 0, because a new sacffold starts
+            print("New scaffold: ", splitted_line[0])
+
+            # Appends the old scaffold to the final output list if low cov. reg. are found in the finished scaffold
+            if current_scaffold[1]:
+                low_cov_regions.append(current_scaffold)
+            current_scaffold = [splitted_line[0], []]   # Resets the list and initialise the List for the new scaffold
+            current_position = 0    # Resets the current position to 0, because a new scaffold starts
 
         if low_cov:  # Case for being in a low coverage region
             if int(splitted_line[2]) > cov_end:     # Checks if the low cov. region ends
@@ -54,7 +58,10 @@ def detect_regions(cov_file_path, cov_start, cov_end):
 
     import_file.close()  # Closes the input file
 
-    low_cov_regions.append(current_scaffold)    # Appends the last remaining scaffold
+    # Appends the last remaining scaffold if low coverage regions where detected in them
+    if current_scaffold[1]:
+        low_cov_regions.append(current_scaffold)
+
     low_cov_regions.pop(0)      # Removes the initialising object
 
     return low_cov_regions
