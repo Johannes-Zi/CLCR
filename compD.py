@@ -194,7 +194,7 @@ def database_comparison(list_with_scaffold_specific_low_cov_reg_lists, fna_file_
 
 def create_slurmarry(protein_database, input_dir, output_dir):
     """
-    Simply creates the slurmarray file for a given input and output directory
+    Simply creates the slurmarray file for a given input and output directory (each dir with an / at the end!)
     :param protein_database: trivial
     :param input_dir: trivial
     :param output_dir: trivial
@@ -206,9 +206,9 @@ def create_slurmarry(protein_database, input_dir, output_dir):
     slurm_file = open(slurm_filename, "w")
 
     # -d database, -q query, -o output path, -k max hits saved per query seq in output file
-    blast_command = "diamond blastx -d " + protein_database + \
-                    "-q " + input_dir + "/temp_in_${SLURM_ARRAY_TASK_ID}.fasta " \
-                    "-o " + output_dir + "/temp_out_${SLURM_ARRAY_TASK_ID}.txt " \
+    blast_command = "diamond blastx -d " + protein_database + " "\
+                    "-q " + input_dir + "temp_in_${SLURM_ARRAY_TASK_ID}.fasta " \
+                    "-o " + output_dir + "temp_out_${SLURM_ARRAY_TASK_ID}.txt " \
                     "-k 25 --max-hsps 0 -c 1 -t /dev/shm -F 15 -f 0"
 
     slurm_file.write("#!/bin/bash\n\n"
@@ -605,7 +605,7 @@ def read_in_results_3(output_dir):
 
                 # Setting the new region
                 current_line = line.strip().split()[1].split("#")
-                current_region = (current_line[0][1:], current_line[1], current_line[2])
+                current_region = (current_line[0], current_line[1], current_line[2])
 
             # Line containing the protein id
             if line.startswith(">"):
@@ -1396,7 +1396,7 @@ def add_gff_information_mod(gff_file, output_region_list, fna_file):
 def create_combined_output_file(output_region_list, fna_file):
 
     """
-    creating the output .txt file, either from regions without or with gff information
+    Creating the output .txt file, either from regions without or with gff information
     reading out the different .fasta/.fna sequences, to transform the complete sequence positions to the position in
     the specific scaffolds
     :param output_region_list: list containing the output regions
