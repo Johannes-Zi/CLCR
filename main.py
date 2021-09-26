@@ -12,7 +12,7 @@ import compD
 def main():
     print("MAIN CALLED")
 
-    # Short read low cov. region detection:
+    """# Short read low cov. region detection:
     short_read_coverage_file = "/share/gluster/NOTLOESUNG/freya/T_draco/t_draco.pbc.wgs_short.txt"
     short_low_cov_regions = bruteF.detect_regions(short_read_coverage_file, 15, 18)
     region_count = 0
@@ -33,7 +33,16 @@ def main():
 
     # Create short read low cov. queries:
     short_read_query_dir = "/home/johannes/Desktop/trachinus_draco/short_read_queries/"
-    compD.database_comparison(short_low_cov_regions, assembly_file, 500, short_read_query_dir, 5000)
+    compD.database_comparison(short_low_cov_regions, assembly_file, 500, short_read_query_dir, 5000)"""
+
+    # Sending the slurm jobarray to the cluster
+    protein_database = "/home/johannes/Desktop/trachinus_draco/protein_db/protein_db.dmnd"
+    input_dir = "/home/johannes/Desktop/trachinus_draco/short_read_queries/"
+    output_dir = "/home/johannes/Desktop/trachinus_draco/short_read_queries_output/"
+
+    compD.create_slurmarry(protein_database, input_dir, output_dir)
+
+    # sbatch --array=1-51 CLCR_slurmarray.slurm
 
 
 if __name__ == '__main__':

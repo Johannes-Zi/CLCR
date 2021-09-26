@@ -192,9 +192,10 @@ def database_comparison(list_with_scaffold_specific_low_cov_reg_lists, fna_file_
     return None
 
 
-def create_slurmarry(input_dir, output_dir):
+def create_slurmarry(protein_database, input_dir, output_dir):
     """
     Simply creates the slurmarray file for a given input and output directory
+    :param protein_database: trivial
     :param input_dir: trivial
     :param output_dir: trivial
     :return: CLCR_slurmarray.slurm file at the cwd
@@ -205,7 +206,7 @@ def create_slurmarry(input_dir, output_dir):
     slurm_file = open(slurm_filename, "w")
 
     # -d database, -q query, -o output path, -k max hits saved per query seq in output file
-    blast_command = "diamond blastx -d /home/johannes/Desktop/trachinus_draco/protein_db/protein_db.dmnd " \
+    blast_command = "diamond blastx -d " + protein_database + \
                     "-q " + input_dir + "/temp_in_${SLURM_ARRAY_TASK_ID}.fasta " \
                     "-o " + output_dir + "/temp_out_${SLURM_ARRAY_TASK_ID}.txt " \
                     "-k 25 --max-hsps 0 -c 1 -t /dev/shm -F 15 -f 0"
@@ -222,7 +223,6 @@ def create_slurmarry(input_dir, output_dir):
 
     # sending the job via slurm to the cluster
     #os.system(("sbatch --array=1-" + str(fasta_count) + slurm_filename))
-    # sbatch --array=1-3 arraytestfile.slurm
 
     return None
 
