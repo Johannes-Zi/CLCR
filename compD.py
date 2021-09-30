@@ -752,13 +752,13 @@ def read_in_results_3(output_dir):
     return output_region_list, healing_region_list
 
 
-def heal_assembly_file(healing_region_list, input_fna_path):
+def heal_assembly_file(healing_region_list, input_fna_path, outut_dir):
     """
     Gets the healing_region_list which contains the frameshift positions in each query, and inserts N's at those
-    positions, to heal the reading frame. The healed assembly is afterwards saved in the same directory as the given
-    original assembly .fna file.
+    positions, to heal the reading frame. The healed assembly is afterwards saved in the give output directory.
     The new assembly file doesnt contain comments.
     :param healing_region_list: Contains for each query: scaffold, start pos., end pos. in scaff., frameshift pos. list
+    :param outut_dir: directory where the new "healed assembly" is stored (should contain a \ at the last position)
     :param input_fna_path:  File path to the original assembly file
     :return: File path to the new modified assembly file
     """
@@ -788,6 +788,8 @@ def heal_assembly_file(healing_region_list, input_fna_path):
     # Delete the first empty initialising element
     scaffold_list.pop(0)
 
+    print(scaffold_list[0][0], len(scaffold_list[0][1]), scaffold_list[0][1][0:10])
+
     # Correct the frameshifts
     # Inserting the N's from the end to the beginning, to prevent the necessity of adapting the insertion position in
     # dependency to the previous inserted frameshifts
@@ -795,6 +797,8 @@ def heal_assembly_file(healing_region_list, input_fna_path):
     # but the reverse option also sorts the scaffolds descending
     sorted_healing_region_list = sorted(healing_region_list, reverse=True,  key=lambda temp_query: (temp_query[0],
                                                                                                     temp_query[1]))
+    print("sorted")
+    count = 0
 
     for query in sorted_healing_region_list:
         # Search the corresponding scaffold
@@ -802,6 +806,10 @@ def heal_assembly_file(healing_region_list, input_fna_path):
             # Case where matching scaffold is found
             if scaffold[0] == query[0]:
                 query_start_pos = int(query[1])
+                count += 1
+                if count == 1200:
+                    print("10% more")
+                    count = 0
 
                 # Second sort step, now the frameshift positions in each query are sorted descending
                 temp_sorted_query = sorted(query[3], reverse=True,  key=lambda temp_query: temp_query[0])
@@ -818,7 +826,9 @@ def heal_assembly_file(healing_region_list, input_fna_path):
                 break
 
     # Create the new assembly .fna file path, located in the same dir as the original assembly file
-    new_fna_file_path = input_fna_path[:(input_fna_path.rfind("/") + 1)] + "new_fna_file.txt"
+    new_fna_file_path = outut_dir + "new_fna_file.txt"
+
+    print("create new assembly file")
 
     # Creating the new assembly file (with the inserted N's)
     new_fna_file = open(new_fna_file_path, "w")

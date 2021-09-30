@@ -67,8 +67,12 @@ def main():
     # 13013  regions with at least one frameshift are detected
     # 44637  queries had at least one Diamond hit
 
+    old_assembly = "/share/gluster/assemblies/Tdraco/" \
+                    "t_draco_pacbio_salsa.FINAL_gap_closed.scaff_seqs_FINAL_pilon_2.fasta"
 
+    new_assembly_dir = "/home/johannes/Desktop/trachinus_draco/healed_assembly/"
 
+    compD.heal_assembly_file(healing_region_list, old_assembly, new_assembly_dir)
 
 if __name__ == '__main__':
     main()
