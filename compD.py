@@ -73,7 +73,7 @@ def database_comparison(list_with_scaffold_specific_low_cov_reg_lists, fna_file_
             if scaffold_name == current_scaffold[0]:
 
                 # Possible first cases where the region cant be expanded 250 to the left,
-                # because the (startposition(of the region) - 150) < 0
+                # because the (startposition(of the region) - 250) < 0
                 while (current_low_cov_list[current_tuple][0] - int(min_length / 2)) <= 0:
 
                     # Calculating the expand length
@@ -151,8 +151,8 @@ def database_comparison(list_with_scaffold_specific_low_cov_reg_lists, fna_file_
                         new_fasta = query_dir + "/" + "temp_in_" + str(fasta_count) + ".fasta"
                         current_fasta = open(new_fasta, "w")
 
-                # Possible last cases where the region cant be expanded 150 to the right,
-                # because (the endposition(of the region) + 150) > sequence length
+                # Possible last cases where the region cant be expanded 250 to the right,
+                # because (the endposition(of the region) + 250) > sequence length
                 while current_tuple < len(current_low_cov_list):
                     # Calculating the expand length
                     region_length = current_low_cov_list[current_tuple][1] - current_low_cov_list[current_tuple][0]
@@ -487,7 +487,7 @@ def exclude_putative_transition_frameshift(query_alignment, subject_alignment, f
     return wrong_intron
 
 
-def read_in_results_3(output_dir):
+def read_in_results_3(output_dir, max_detect_dist):
     """
     The function reads in the Diamond blastx results in a given directory. The results for each hit are stored in the
     output_region_list, which is also returned. The contains for every region: Scaffold, start pos., end pos. in
@@ -497,8 +497,16 @@ def read_in_results_3(output_dir):
     position in the scaffold, and a list with all positions in the query, where frameshifts are detected and need to
     be healed later . But not all Diamond hits of each Query are included, some are excluded by our overlapping
     heuristic, more detailed information in the documentation and in the code.
+    In cases, where the low regions mus be expanded to work as a query. It could happen, that a detected frameshift in
+    query is located in the expanded part of the query and not in the original low cov. region. This contradicts the
+    concept of the whole program, using low cov. regions that correlate with bad polishing. The max_detect_distance
+    defines the distance from a detected frameshift position to the original low cov. region, where a frameshift is
+    still considered and not excluded in the further analysis.
     PS: frameshift positions are the python list positions.
     :param output_dir: path to the output directory
+    :param max_detect_dist: The max_detect_distance defines the distance from
+                            a detected frameshift position to the original low cov. region, where a frameshift is still
+                            considered and not excluded in the further analysis. Values around 10 might be reasonable.
     :return: output_region_list, healing_region_list
     """
     # Returns every file in the directory with .out at the end
@@ -515,13 +523,15 @@ def read_in_results_3(output_dir):
         current_output_file = open(x, "r")
 
         # Initialising the parameters
-        query_hit_list = []    # Contains all hit of the current query
-        current_region = ("testscaffold", 0, 0)  # Scaffold, start and end position of the current considered region
+        query_hit_list = []    # Contains all hits of the current query
+        current_region = ("initscaffold", 0, 0)  # Scaffold, start and end position of the current considered region
         frameshift_list = []  # Contains the positions of detected frameshifts
         query_alignment = ""
         # The following two parameters are important for the localising of the frameshift in the scaffold, and the later
         # Overlapping heuristic for decide which frameshifts are considered in each query
-        query_alignment_start_pos = 0   # Saves the start position of the alignment in the query
+        query_alignment_start_pos = 0   # Saves the start position of the alignment in the query, initialising it with 0
+                                        # is no problem because Diamond starts with counting at 1
+
         query_alignment_end_pos = 0     # for saving the current end position of each alignment
         subject_alignment = ""
         # The following three store the respective values
@@ -532,7 +542,8 @@ def read_in_results_3(output_dir):
 
         # Reads in the current output file
         for line in current_output_file:
-            # Case for a new Query
+
+            # Case for a new Query, if for the previous regions hits were found the hits were appended to the outputlist
             if line.startswith("Query="):
 
                 # Case if the query_hit_list, which holds the hits of each query, is not empty,
@@ -703,6 +714,18 @@ def read_in_results_3(output_dir):
 
         current_output_file.close()
 
+    """Ich sollte die Art wie die output region list verabeitet/ erstellt wir anpassen. Nicht jeden hit einzeln appenden,
+    sondern subliste mit allen hits und den jeweiligen query informationen speichern, also die low cov. region UND die
+    query region, welche bei kurzen low cov. abweichen kann. Wenn ich dann die Overlapping heuristic verwende, sollten 
+    zwar immer noch die hits nach evalue sortiert einbezogen werden, aber die detectierten frameshifts nur wenn sie nahe
+    genug/ in der low cov. region liegen (Query Teil wird von dem berücksichtigten alignment abgedeckt auch wenn die 
+    Frameshifts nicht miteinbezogen werden...). Die Anpassung der Frameshift positionen auf die Orginalpositionen und 
+    das Aussortieren würde ich schon in dieser funktion machen, somit werden die gefilterten/korrekten positione(welche 
+    auch negativ sein können) and die healing funktion übermittelt
+    
+    Die output region list so neu erstellen, sodass nur hits enthalten sind, welche auch wirklich berücksichtigt wurden,
+    sodass die Folgefunktionen die Daten korrekt weiterverarbeiten können."""
+
     # Determine the frameshift positions in each query, by combining the information of all hits per query.
     # Contains the information of the current query  [scaffold, startpostion_in_scaffold, endposition_in_scaffold,
     # [frameshift position list]]
@@ -738,6 +761,8 @@ def read_in_results_3(output_dir):
             if not region_overlapping:
                 # Append the new region to the coverage list
                 current_query_region_coverage.append([alignment_start_pos, alignment_end_pos])
+                """Hier nur appenden, wenn die Frameshifts nahe genug/ in der low cov. region liegen, die 
+                Positionsangaben der Frameshifts zusätlich auf den querystart anpassen."""
                 current_query[3] += diamond_hit[7]      # add the frameshifts of the new hit to final list
 
         # Remove the unnecessary start and end positions of the alignment in the output

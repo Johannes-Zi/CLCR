@@ -74,6 +74,7 @@ def main():
 
     compD.heal_assembly_file(healing_region_list, old_assembly, new_assembly_dir)
 
+
 if __name__ == '__main__':
     main()
 
