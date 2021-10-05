@@ -14,7 +14,8 @@ def database_comparison(list_with_scaffold_specific_low_cov_reg_lists, fna_file_
     """
     This function creates the .fasta query files for a diamond slurm job, out of a input list with the low coverage
     regions of each and a path to the matching fna file to read out the sequences of the low coverage regions.
-    The saved positions of the queries in each scaffold are the normal positions, not python list positions(-1) !!!
+    The saved positions of the queries/low cov. regions in each scaffold are the normal positions, not python list
+    positions(-1) !!!
     :param list_with_scaffold_specific_low_cov_reg_lists: list consisting of scaffold specific sublists with tuples
                                                           containing the start and he end of a region for database
                                                           comparison (output of detect_regions, merge_regions or
@@ -93,9 +94,12 @@ def database_comparison(list_with_scaffold_specific_low_cov_reg_lists, fna_file_
                         region_start = current_low_cov_list[current_tuple][0] - expand_left
                         region_end = current_low_cov_list[current_tuple][1] + expand_right
 
-                    # Writing the region in the fasta file
+                    # Writing the query header in the fasta file
                     current_fasta.write((">" + scaffold_name + "#" + str(current_low_cov_list[current_tuple][0]) +
-                                         "#" + str(current_low_cov_list[current_tuple][1]) + "\n"))
+                                         "#" + str(current_low_cov_list[current_tuple][1]) +
+                                         "#" + str(region_start) + "#" + str(region_end) + "\n"))
+
+                    # Writing the query sequence in the fasta file
                     current_fasta.write(("".join(current_scaffold[1][region_start:region_end]) + "\n"))
                     current_tuple += 1
                     count_added_queries += 1
@@ -116,10 +120,6 @@ def database_comparison(list_with_scaffold_specific_low_cov_reg_lists, fna_file_
                         break_value = True
                         break
 
-                    # Writes the header
-                    current_fasta.write((">" + scaffold_name + "#" + str(current_low_cov_list[current_tuple][0]) +
-                                         "#" + str(current_low_cov_list[current_tuple][1]) + "\n"))
-
                     # Calculation the length a region must be expanded
                     region_length = current_low_cov_list[current_tuple][1] - current_low_cov_list[current_tuple][0]
 
@@ -127,6 +127,12 @@ def database_comparison(list_with_scaffold_specific_low_cov_reg_lists, fna_file_
                         expand_len = int((min_length - region_length) / 2)
                     else:
                         expand_len = 0
+
+                    # Writes the query header
+                    current_fasta.write((">" + scaffold_name + "#" + str(current_low_cov_list[current_tuple][0]) +
+                                         "#" + str(current_low_cov_list[current_tuple][1]) +
+                                         "#" + str(current_low_cov_list[current_tuple][0] - expand_len) +
+                                         "#" + str(current_low_cov_list[current_tuple][1] + expand_len) + "\n"))
 
                     # Write the query sequence in the file
                     current_fasta.write("".join(current_scaffold[1]
@@ -172,9 +178,11 @@ def database_comparison(list_with_scaffold_specific_low_cov_reg_lists, fna_file_
                         region_start = current_low_cov_list[current_tuple][0] - expand_left
                         region_end = current_low_cov_list[current_tuple][1] + expand_right
 
-                    # Writing the region in the fasta file
+                    #  Writing the query header in the fasta file
                     current_fasta.write((">" + scaffold_name + "#" + str(current_low_cov_list[current_tuple][0]) +
-                                         "#" + str(current_low_cov_list[current_tuple][1]) + "\n"))
+                                         "#" + str(current_low_cov_list[current_tuple][1]) +
+                                         "#" + str(region_start) + "#" + str(region_end) + "\n"))
+                    # Writing the query sequence in the fasta file
                     current_fasta.write(("".join(current_scaffold[1][region_start:region_end]) + "\n"))
                     current_tuple += 1
                     count_added_queries += 1
@@ -487,27 +495,20 @@ def exclude_putative_transition_frameshift(query_alignment, subject_alignment, f
     return wrong_intron
 
 
-def read_in_results_3(output_dir, max_detect_dist):
+def read_in_diamond_output(output_dir):
     """
-    The function reads in the Diamond blastx results in a given directory. The results for each hit are stored in the
-    output_region_list, which is also returned. The contains for every region: Scaffold, start pos., end pos. in
-    scaffold, e-value, bitscore, similarity-percentage, list with all detected frameshifts with their positions in the
-    query (I = insertion, D = deletion). The second output list (healing_region_list), contains the combined frameshift
-    information of all Diamond hits per query, which means the scaffold, the start position in the scaffold, the end
-    position in the scaffold, and a list with all positions in the query, where frameshifts are detected and need to
-    be healed later . But not all Diamond hits of each Query are included, some are excluded by our overlapping
-    heuristic, more detailed information in the documentation and in the code.
-    In cases, where the low regions mus be expanded to work as a query. It could happen, that a detected frameshift in
-    query is located in the expanded part of the query and not in the original low cov. region. This contradicts the
-    concept of the whole program, using low cov. regions that correlate with bad polishing. The max_detect_distance
-    defines the distance from a detected frameshift position to the original low cov. region, where a frameshift is
-    still considered and not excluded in the further analysis.
+    The function reads in the Diamond blastx results in a given directory. The results for each query are combined and
+    stored in the all_diamond_results list, which is also returned. Stores the processed results of each query in the
+    form: [scaffold, low_cov_start_pos_in_scaffold, low_cov_end_pos_in_scaffold, query_start_pos_in_scaffold,
+    query_end_pos_in_scaffold, Sublist with the information of each query hit: [[protein_hit, e_value, bit_score,
+    similarity_percentage, frameshift_list, query_alignment_start_pos, query_alignment_end_pos],
+    ...]], which are sublists of the all_diamond_results list. The frameshift list of each protein hit contains all
+    detected frameshifts with their positions in the query (I = insertion, D = deletion) e.g. (20, I).
+    But not all frameshifts are considered, putative detections at intron/exon transistions are excluded (see
+    exclude_putative_transition_frameshift() function)
     PS: frameshift positions are the python list positions.
     :param output_dir: path to the output directory
-    :param max_detect_dist: The max_detect_distance defines the distance from
-                            a detected frameshift position to the original low cov. region, where a frameshift is still
-                            considered and not excluded in the further analysis. Values around 10 might be reasonable.
-    :return: output_region_list, healing_region_list
+    :return: all_diamond_results
     """
     # Returns every file in the directory with .out at the end
     output_file_list = glob.glob(output_dir + "/temp_out_*.txt")
@@ -516,7 +517,7 @@ def read_in_results_3(output_dir, max_detect_dist):
     dir_path_len = len(output_dir) + 9  # +9 because temp_out_ consists of 9 chars
     output_file_list = sorted(output_file_list, key=lambda current_path: int(current_path[dir_path_len:-4]))
 
-    output_region_list = []  # Containing the Diamond hits with additional information
+    all_diamond_results = []  # Contains for each query a sublist with all diamond hits
 
     # Reading out all output files
     for x in output_file_list:
@@ -524,13 +525,17 @@ def read_in_results_3(output_dir, max_detect_dist):
 
         # Initialising the parameters
         query_hit_list = []    # Contains all hits of the current query
-        current_region = ("initscaffold", 0, 0)  # Scaffold, start and end position of the current considered region
+
+        # Position information of the current region
+        # [scaffold, low_cov_start_pos_in_scaffold, low_cov_end_pos_in_scaffold, query_start_pos_in_scaffold,
+        # query_end_pos_in_scaffold]
+        current_region = ["initscaffold", 0, 0, 0, 0]
         frameshift_list = []  # Contains the positions of detected frameshifts
         query_alignment = ""
         # The following two parameters are important for the localising of the frameshift in the scaffold, and the later
         # Overlapping heuristic for decide which frameshifts are considered in each query
         query_alignment_start_pos = 0   # Saves the start position of the alignment in the query, initialising it with 0
-                                        # is no problem because Diamond starts with counting at 1
+                                        # Is no problem because Diamond starts with counting at 1
 
         query_alignment_end_pos = 0     # for saving the current end position of each alignment
         subject_alignment = ""
@@ -565,7 +570,18 @@ def read_in_results_3(output_dir, max_detect_dist):
                     # hit of the previous query, which is a result of the used approach
                     query_hit_list.pop(0)
 
-                    # Appends each protein hit of the query to the output_region_list
+                    # Stores the processed results of each query in the form:
+                    # [scaffold, low_cov_start_pos_in_scaffold, low_cov_end_pos_in_scaffold,
+                    # query_start_pos_in_scaffold, query_end_pos_in_scaffold,
+                    # Sublist with the information of each query hit:
+                    # [[protein_hit, e_value, bit_score, similarity_percentage, frameshift_list,
+                    # query_alignment_start_pos, query_alignment_end_pos], ...]]
+                    processed_query_hit_list = [current_region[0], current_region[1], current_region[2],
+                                                current_region[3], current_region[4], []]
+
+                    # Processes and appends each protein hit of the query to the processed_query_hit_list and if all
+                    # hits are processed, appends those list to the all_diamond_results list, which is the output of
+                    # theses function
                     for current_protein_hit in query_hit_list:
 
                         # The placed gaps in the query in the alignment are counted for a correct position calculation
@@ -602,10 +618,11 @@ def read_in_results_3(output_dir, max_detect_dist):
                                     frameshift_list.append(((current_protein_hit[6] - 1) +
                                                             (3 * (query_pos - query_gap_count)), "D"))
 
-                        output_region_list.append([current_region[0], current_region[1], current_region[2],
-                                                   current_protein_hit[0], current_protein_hit[1],
-                                                   current_protein_hit[2], current_protein_hit[3], frameshift_list,
-                                                   current_protein_hit[6], current_protein_hit[7]])
+                        # Appends the data of the current protein hit to the query specific list
+                        processed_query_hit_list[5].append([current_protein_hit[0], current_protein_hit[1],
+                                                            current_protein_hit[2], current_protein_hit[3],
+                                                            frameshift_list,
+                                                            current_protein_hit[6], current_protein_hit[7]])
 
                         # Reset values
                         frameshift_list = []
@@ -614,9 +631,16 @@ def read_in_results_3(output_dir, max_detect_dist):
                     # initialising element is created
                     query_hit_list = []
 
+                    # Appends the processed hit results of the current query to the final output list, if the current
+                    # query had at least one diamond hit
+                    all_diamond_results.append(processed_query_hit_list)
+
                 # Setting the new region
+                # Output example "Query= HiC_scaffold_12#1784003#1784396#11111#22222"
                 current_line = line.strip().split()[1].split("#")
-                current_region = (current_line[0], current_line[1], current_line[2])
+                # Format: [scaffold, low_cov_start_pos_in_scaffold, low_cov_end_pos_in_scaffold,
+                # query_start_pos_in_scaffold, query_end_pos_in_scaffold]
+                current_region = current_line[0:5]
 
             # Line containing the protein id
             if line.startswith(">"):
@@ -658,7 +682,7 @@ def read_in_results_3(output_dir, max_detect_dist):
             if line.startswith("Sbjct "):
                 subject_alignment += line.split()[2]
 
-        # Appending the last region if necessary (same as upper part)
+        # Appending the hits of the last query if there were hits(same as upper part)
         if query_hit_list:
             # Appends the last remaining protein hit of the query
             query_hit_list.append([protein_hit, e_value, bit_score, similarity_percentage, query_alignment,
@@ -667,7 +691,16 @@ def read_in_results_3(output_dir, max_detect_dist):
             # Removes the initialising element of the query
             query_hit_list.pop(0)
 
-            # Appends each protein hit of the query to the output_region_list
+            # Stores the processed results of each query in the form:
+            # [scaffold, query_start_pos_in_scaffold, query_end_pos_in_scaffold, low_cov_start_pos_in_scaffold,
+            # low_cov_end_pos_in_scaffold, Sublist with the information of each query hit:
+            # [[protein_hit, e_value, bit_score, similarity_percentage, query_alignment,
+            #  subject_alignment, query_alignment_start_pos, query_alignment_end_pos], ...]]
+            processed_query_hit_list = [current_region[0], current_region[1], current_region[2], current_region[3],
+                                        current_region[4], []]
+
+            # Processes and appends each protein hit of the query to the processed_query_hit_list and if all hits are
+            # processed, appends those list to the all_diamond_results list, which is the output of theses function
             for current_protein_hit in query_hit_list:
 
                 # The placed gaps in the query in the alignment are counted for a correct position calculation
@@ -704,40 +737,67 @@ def read_in_results_3(output_dir, max_detect_dist):
                             frameshift_list.append(((current_protein_hit[6] - 1) +
                                                     (3 * (query_pos - query_gap_count)), "D"))
 
-                output_region_list.append([current_region[0], current_region[1], current_region[2],
-                                           current_protein_hit[0], current_protein_hit[1],
-                                           current_protein_hit[2], current_protein_hit[3], frameshift_list,
-                                           current_protein_hit[6], current_protein_hit[7]])
+                # Appends the data of the current protein hit to the query specific list
+                processed_query_hit_list[5].append([current_protein_hit[0], current_protein_hit[1],
+                                                   current_protein_hit[2], current_protein_hit[3], frameshift_list,
+                                                   current_protein_hit[6], current_protein_hit[7]])
 
                 # Reset the list for the next protein hit
                 frameshift_list = []
 
+            # Appends the processed hit results of the current query to the final output list, if the current
+            # query had at least one diamond hit
+            all_diamond_results.append(processed_query_hit_list)
+
         current_output_file.close()
 
-    """Ich sollte die Art wie die output region list verabeitet/ erstellt wir anpassen. Nicht jeden hit einzeln appenden,
-    sondern subliste mit allen hits und den jeweiligen query informationen speichern, also die low cov. region UND die
-    query region, welche bei kurzen low cov. abweichen kann. Wenn ich dann die Overlapping heuristic verwende, sollten 
+    return all_diamond_results
+
+
+def overlapping_heuristic(all_diamond_results, max_detect_dist):
+    """
+    The second output list (healing_region_list), contains the combined frameshift
+    information of all Diamond hits per query, which means the scaffold, the start position in the scaffold, the end
+    position in the scaffold, and a list with all positions in the query, where frameshifts are detected and need to
+    be healed later . But not all Diamond hits of each Query are included, some are excluded by our overlapping
+    heuristic, more detailed information in the documentation and in the code.
+    In cases, where the low regions mus be expanded to work as a query. It could happen, that a detected frameshift in
+    query is located in the expanded part of the query and not in the original low cov. region. This contradicts the
+    concept of the whole program, using low cov. regions that correlate with bad polishing. The max_detect_distance
+    defines the distance from a detected frameshift position to the original low cov. region, where a frameshift is
+    still considered and not excluded in the further analysis.
+    :param all_diamond_results:
+    :param max_detect_dist: The max_detect_distance defines the distance from
+                            a detected frameshift position to the original low cov. region, where a frameshift is still
+                            considered and not excluded in the further analysis. Values around 10 might be reasonable.
+    :return: output_region_list, healing_region_list
+    """
+
+    """
+    Wenn ich dann die Overlapping heuristic verwende, sollten
     zwar immer noch die hits nach evalue sortiert einbezogen werden, aber die detectierten frameshifts nur wenn sie nahe
-    genug/ in der low cov. region liegen (Query Teil wird von dem berücksichtigten alignment abgedeckt auch wenn die 
-    Frameshifts nicht miteinbezogen werden...). Die Anpassung der Frameshift positionen auf die Orginalpositionen und 
-    das Aussortieren würde ich schon in dieser funktion machen, somit werden die gefilterten/korrekten positione(welche 
+    genug/ in der low cov. region liegen (Query Teil wird von dem berücksichtigten alignment abgedeckt auch wenn die
+    Frameshifts nicht miteinbezogen werden...). Die Anpassung der Frameshift positionen auf die Orginalpositionen und
+    das Aussortieren würde ich schon in dieser funktion machen, somit werden die gefilterten/korrekten positione(welche
     auch negativ sein können) and die healing funktion übermittelt
-    
+
     Die output region list so neu erstellen, sodass nur hits enthalten sind, welche auch wirklich berücksichtigt wurden,
-    sodass die Folgefunktionen die Daten korrekt weiterverarbeiten können."""
+    sodass die Folgefunktionen die Daten korrekt weiterverarbeiten können.
+
+    Hier könnte man auch eine Längenverteilung der berücksichtigeten queries erstellen, oder halt in der healing function"""
 
     # Determine the frameshift positions in each query, by combining the information of all hits per query.
     # Contains the information of the current query  [scaffold, startpostion_in_scaffold, endposition_in_scaffold,
     # [frameshift position list]]
     current_query = ["#", "#", "#"]
-    current_query_region_coverage = []     # Contains the start and end pos. of hit alignments, that
+    current_query_region_coverage = []  # Contains the start and end pos. of hit alignments, that
     # healing_region_list contains the final query information for all queries, and functions as output list
     healing_region_list = []
 
-    for diamond_hit in output_region_list:
+    for diamond_hit in all_diamond_results:
         # If case for start of new query information, old, now complete, query information could be appended to output
         if diamond_hit[0:3] != current_query[0:3]:
-            healing_region_list.append(current_query)       # Appends the final information of the previous region
+            healing_region_list.append(current_query)  # Appends the final information of the previous region
             # Initialise with new information
             current_query = [diamond_hit[0], diamond_hit[1], diamond_hit[2], copy.copy(diamond_hit[7])]
             current_query_region_coverage = [[int(diamond_hit[8]), int(diamond_hit[9])]]
@@ -745,16 +805,16 @@ def read_in_results_3(output_dir, max_detect_dist):
         # Else case for adding frameshift information of an additional protein hit if possible
         else:
             # Initialise parameters
-            region_overlapping = False      # Saves if the new region is overlapping with a already included region
+            region_overlapping = False  # Saves if the new region is overlapping with a already included region
             alignment_start_pos = diamond_hit[8]
             alignment_end_pos = diamond_hit[9]
 
             # Checks for all already added regions, if the new region is overlapping with one of them
             for prev_region in current_query_region_coverage:
-                if ((alignment_end_pos >= prev_region[0]) and (alignment_start_pos <= prev_region[0])) or\
-                    ((alignment_end_pos >= prev_region[1]) and (alignment_start_pos <= prev_region[1])) or\
+                if ((alignment_end_pos >= prev_region[0]) and (alignment_start_pos <= prev_region[0])) or \
+                        ((alignment_end_pos >= prev_region[1]) and (alignment_start_pos <= prev_region[1])) or \
                         ((alignment_start_pos >= prev_region[0]) and (alignment_end_pos <= prev_region[1])):
-                    region_overlapping = True       # overlapping region found
+                    region_overlapping = True  # overlapping region found
                     break
 
             # Case were no previous region is overlapping with the current region
@@ -763,7 +823,7 @@ def read_in_results_3(output_dir, max_detect_dist):
                 current_query_region_coverage.append([alignment_start_pos, alignment_end_pos])
                 """Hier nur appenden, wenn die Frameshifts nahe genug/ in der low cov. region liegen, die 
                 Positionsangaben der Frameshifts zusätlich auf den querystart anpassen."""
-                current_query[3] += diamond_hit[7]      # add the frameshifts of the new hit to final list
+                current_query[3] += diamond_hit[7]  # add the frameshifts of the new hit to final list
 
         # Remove the unnecessary start and end positions of the alignment in the output
         diamond_hit.pop(9)

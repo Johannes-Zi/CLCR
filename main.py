@@ -48,7 +48,7 @@ def main():
 
     output_dir = "/home/johannes/Desktop/trachinus_draco/short_read_queries_output/"
 
-    output_region_list, healing_region_list = compD.read_in_results_3(output_dir)
+    output_region_list, healing_region_list = compD.read_in_diamond_output(output_dir)
 
     found_frameshift_count = 0
     regions_with_frameshift = 0
