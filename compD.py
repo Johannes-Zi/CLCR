@@ -787,27 +787,24 @@ def overlapping_heuristic(all_diamond_results, max_detect_dist):
     Hier könnte man auch eine Längenverteilung der berücksichtigeten queries erstellen, oder halt in der healing function"""
 
     # Determine the frameshift positions in each query, by combining the information of all hits per query.
-    # Contains the information of the current query  [scaffold, startpostion_in_scaffold, endposition_in_scaffold,
-    # [frameshift position list]]
-    current_query = ["#", "#", "#"]
     current_query_region_coverage = []  # Contains the start and end pos. of hit alignments, that
     # healing_region_list contains the final query information for all queries, and functions as output list
     healing_region_list = []
+    # Contains the Diamond output data of each considered Diamond hit in the assembly healing
+    output_region_list = []
 
-    for diamond_hit in all_diamond_results:
-        # If case for start of new query information, old, now complete, query information could be appended to output
-        if diamond_hit[0:3] != current_query[0:3]:
-            healing_region_list.append(current_query)  # Appends the final information of the previous region
-            # Initialise with new information
-            current_query = [diamond_hit[0], diamond_hit[1], diamond_hit[2], copy.copy(diamond_hit[7])]
-            current_query_region_coverage = [[int(diamond_hit[8]), int(diamond_hit[9])]]
+    for query_data in all_diamond_results:
 
-        # Else case for adding frameshift information of an additional protein hit if possible
-        else:
-            # Initialise parameters
+        # Saves what regions of the query are already covered, by saving the start and end positions in the query of
+        # already considered query-protein alignments
+        current_query_region_coverage = []
+
+        for diamond_hit in query_data[5]:
+
+            # Initialise the parameters of the current viewed query-protein alignment
             region_overlapping = False  # Saves if the new region is overlapping with a already included region
-            alignment_start_pos = diamond_hit[8]
-            alignment_end_pos = diamond_hit[9]
+            alignment_start_pos = diamond_hit[5]
+            alignment_end_pos = diamond_hit[6]
 
             # Checks for all already added regions, if the new region is overlapping with one of them
             for prev_region in current_query_region_coverage:
@@ -822,17 +819,20 @@ def overlapping_heuristic(all_diamond_results, max_detect_dist):
                 # Append the new region to the coverage list
                 current_query_region_coverage.append([alignment_start_pos, alignment_end_pos])
                 """Hier nur appenden, wenn die Frameshifts nahe genug/ in der low cov. region liegen, die 
-                Positionsangaben der Frameshifts zusätlich auf den querystart anpassen."""
+                Positionsangaben der Frameshifts zusätlich auf den querystart anpassen.
+                (max_detect_dist)"""
                 current_query[3] += diamond_hit[7]  # add the frameshifts of the new hit to final list
+                """
+                Daten so speichern, sodass ich ein gff file habe, welches die gesammten low cov. Breiche anzeigt, und 
+                ein file welches die berücksichtigten Query hits in der low cov region mit position anzeigt, undbedingt 
+                auch im nächsten progress report erwähnen, das ist ziemlich nice...
+                
+                Zusätzlich Längenverteilung der berücksichtigten queries erstellen
+                """
 
-        # Remove the unnecessary start and end positions of the alignment in the output
-        diamond_hit.pop(9)
-        diamond_hit.pop(8)
-
-    # Append last remaining region
-    healing_region_list.append(current_query)
-    # Remove the initialising object
-    healing_region_list.pop(0)
+        # Append the query data to the healing list
+        """Current query = scaffold, start pos. end pos. , frameshift correction list"""
+        healing_region_list.append(current_query)
 
     return output_region_list, healing_region_list
 
