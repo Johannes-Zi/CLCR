@@ -504,7 +504,7 @@ def read_in_diamond_output(output_dir):
     similarity_percentage, frameshift_list, query_alignment_start_pos, query_alignment_end_pos],
     ...]], which are sublists of the all_diamond_results list. The frameshift list of each protein hit contains all
     detected frameshifts with their positions in the query (I = insertion, D = deletion) e.g. (20, I).
-    But not all frameshifts are considered, putative detections at intron/exon transistions are excluded (see
+    But not all frameshifts are considered, putative detections at intron/exon transitions are excluded (see
     exclude_putative_transition_frameshift() function)
     PS: frameshift positions are the python list positions.
     :param output_dir: path to the output directory
@@ -754,50 +754,51 @@ def read_in_diamond_output(output_dir):
     return all_diamond_results
 
 
-def overlapping_heuristic(all_diamond_results, max_detect_dist):
+def filter_out_relevant_results(all_diamond_results, max_detect_dist):
     """
-    The second output list (healing_region_list), contains the combined frameshift
-    information of all Diamond hits per query, which means the scaffold, the start position in the scaffold, the end
-    position in the scaffold, and a list with all positions in the query, where frameshifts are detected and need to
-    be healed later . But not all Diamond hits of each Query are included, some are excluded by our overlapping
-    heuristic, more detailed information in the documentation and in the code.
-    In cases, where the low regions mus be expanded to work as a query. It could happen, that a detected frameshift in
-    query is located in the expanded part of the query and not in the original low cov. region. This contradicts the
-    concept of the whole program, using low cov. regions that correlate with bad polishing. The max_detect_distance
-    defines the distance from a detected frameshift position to the original low cov. region, where a frameshift is
-    still considered and not excluded in the further analysis.
-    :param all_diamond_results:
+    This functions works as an additional filtering part, where all irrelevant and not project fitting Diamond results
+    are filtered out. This means implementing an overlapping heuristic (for more detailed information about this view
+    the project wiki), and a filtering step where frameshifts are filtered out when they are not in the low coverage
+    region of the query or right next to it. This could happen when a low cov. region is to short and was expanded to
+    the minimum base-pair length to work as a query. In this case frameshifts could also be detected at positions of the
+    expanded part of the query and not in the original low cov. part. Those frameshifts contradict to the program
+    approach of healing frameshifts at low cov. regions that correlate with bad polishing. To implement a "soft" cutoff
+    between considered and "thrown away" frameshift information, frameshifts that are still close to the original low
+    cov. region are also considered. "Close" is defined by the max_detect_dist parameter, so eg. max_detect_dist = 10
+    -> frameshifts that are 10Bp away from the low cov. region are still considered.
+    The first output list (considered_diamond_hits_list), contains all Diamond hits (with the corresponding
+    information), that where considered for the healing by the overlapping heuristic (The list format could be seen
+    below in the code comments), REMIND all detected frameshifts of each Diamond hit are stored in this list, even when
+    they are not considered in the following healing process!!!
+    The second output list (healing_region_list), contains the combined frameshift information of all Diamond hits per
+    query, which means the scaffold, start position of the query in the scaffold, end position of the query in the
+    scaffold, and a list with all positions in the query, where frameshifts are detected and need to be healed later.
+    But not all frameshifts, of each by the overlapping heuristic considered hit, are considered for the healing, like
+    described before, so there could be Diamond hits where only a part of the detected frameshifts are considered.
+    The frameshifts are saved as eg. (20, I) or (12, D), which stands for an insertion 20 base-pairs downstream of the
+    query start position, or a deletion 12 base-pair downstream.
+    :param all_diamond_results: Output of the read_in_diamond_output_function
     :param max_detect_dist: The max_detect_distance defines the distance from
                             a detected frameshift position to the original low cov. region, where a frameshift is still
                             considered and not excluded in the further analysis. Values around 10 might be reasonable.
-    :return: output_region_list, healing_region_list
+    :return: considered_diamond_hits_list, healing_region_list
     """
 
-    """
-    Wenn ich dann die Overlapping heuristic verwende, sollten
-    zwar immer noch die hits nach evalue sortiert einbezogen werden, aber die detectierten frameshifts nur wenn sie nahe
-    genug/ in der low cov. region liegen (Query Teil wird von dem berücksichtigten alignment abgedeckt auch wenn die
-    Frameshifts nicht miteinbezogen werden...). Die Anpassung der Frameshift positionen auf die Orginalpositionen und
-    das Aussortieren würde ich schon in dieser funktion machen, somit werden die gefilterten/korrekten positione(welche
-    auch negativ sein können) and die healing funktion übermittelt
-
-    Die output region list so neu erstellen, sodass nur hits enthalten sind, welche auch wirklich berücksichtigt wurden,
-    sodass die Folgefunktionen die Daten korrekt weiterverarbeiten können.
-
-    Hier könnte man auch eine Längenverteilung der berücksichtigeten queries erstellen, oder halt in der healing function"""
-
-    # Determine the frameshift positions in each query, by combining the information of all hits per query.
-    current_query_region_coverage = []  # Contains the start and end pos. of hit alignments, that
     # healing_region_list contains the final query information for all queries, and functions as output list
     healing_region_list = []
-    # Contains the Diamond output data of each considered Diamond hit in the assembly healing
-    output_region_list = []
+    # Contains the complete information of all considered Diamond hits in a format like this:
+    # [[scaffold, query start pos. in scaff, query end pos. in scaff., protein_hit, e_value, bit_score,
+    # similarity_percentage, [COMPLETEframeshift_list]], ...]
+    considered_diamond_hits_list = []
 
     for query_data in all_diamond_results:
 
-        # Saves what regions of the query are already covered, by saving the start and end positions in the query of
-        # already considered query-protein alignments
+        # Saves the regions of the query that are already covered, by saving the start and end positions in the query of
+        # all already considered query-protein alignments
         current_query_region_coverage = []
+
+        # Stores all considered frameshifts of each query
+        filtered_query_frameshift_list = []
 
         for diamond_hit in query_data[5]:
 
@@ -816,25 +817,38 @@ def overlapping_heuristic(all_diamond_results, max_detect_dist):
 
             # Case were no previous region is overlapping with the current region
             if not region_overlapping:
+
                 # Append the new region to the coverage list
                 current_query_region_coverage.append([alignment_start_pos, alignment_end_pos])
-                """Hier nur appenden, wenn die Frameshifts nahe genug/ in der low cov. region liegen, die 
-                Positionsangaben der Frameshifts zusätlich auf den querystart anpassen.
-                (max_detect_dist)"""
-                current_query[3] += diamond_hit[7]  # add the frameshifts of the new hit to final list
-                """
-                Daten so speichern, sodass ich ein gff file habe, welches die gesammten low cov. Breiche anzeigt, und 
-                ein file welches die berücksichtigten Query hits in der low cov region mit position anzeigt, undbedingt 
-                auch im nächsten progress report erwähnen, das ist ziemlich nice...
-                
-                Zusätzlich Längenverteilung der berücksichtigten queries erstellen
-                """
+
+                # Checks for each detected frameshift in the protein-query alignment of the current Diamond hit if the
+                # frameshift lays in the low cov. region of the current query
+                for single_frameshift in diamond_hit[4]:
+
+                    # Appends the frameshift, when it lays into the low cov. region of the query or right next to it (
+                    # distance determined by the max_detect_dist). The previous saved position of each frameshift is
+                    # based on the start position of the query, not of the low cov. region
+                    frameshift_pos_in_scaff = query_data[3] + single_frameshift[0]  # query start pos. frameshift pos.
+
+                    # Checks the overlapping
+                    if ((frameshift_pos_in_scaff >= (query_data[1] - max_detect_dist)) and
+                       (frameshift_pos_in_scaff <= (query_data[2] + max_detect_dist))):
+
+                        # Appends the checked Frameshift to the
+                        filtered_query_frameshift_list += single_frameshift
+
+                # Add the considered Diamond hit to the list with all considered protein hits and the corresponding data
+                # in a format like this:
+                # [[scaffold, query start pos. in scaff, query end pos. in scaff., protein_hit, e_value, bit_score,
+                # similarity_percentage, [COMPLETEframeshift_list]], ...]
+                considered_diamond_hits_list.append([query_data[0], query_data[3], query_data[4], diamond_hit[0],
+                                                    diamond_hit[1], diamond_hit[2], diamond_hit[3], diamond_hit[4]])
 
         # Append the query data to the healing list
-        """Current query = scaffold, start pos. end pos. , frameshift correction list"""
-        healing_region_list.append(current_query)
+        # scaffold, query start pos. in scaff., query end pos. in scaff., frameshift correction list
+        healing_region_list.append([query_data[0], query_data[3], query_data[4], filtered_query_frameshift_list])
 
-    return output_region_list, healing_region_list
+    return considered_diamond_hits_list, healing_region_list
 
 
 def heal_assembly_file(healing_region_list, input_fna_path, outut_dir):
@@ -1234,7 +1248,7 @@ def add_gff_information(gff_file, output_region_list, fna_file):
     return output_region_list
 
 
-def add_gff_information_mod(gff_file, output_region_list, fna_file):
+def add_gff_information_no_introns(gff_file, output_region_list, fna_file):
 
     """
     function when no intron regions are included in the -gff file (instead using gene regions)
