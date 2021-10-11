@@ -275,6 +275,13 @@ def combine_regions_multiple_scaffolds(input_scaffold_list_short, input_scaffold
     return combined_list
 
 
+def low_cov_length_distribution():
+
+    low_cov_length_distribution_list = []
+
+    return low_cov_length_distribution_list
+
+
 def main():
     print("bruteforce main executed")
 

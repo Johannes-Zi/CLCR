@@ -8,8 +8,8 @@ import glob
 import copy
 
 
-def database_comparison(list_with_scaffold_specific_low_cov_reg_lists, fna_file_path, min_length, query_dir,
-                        seq_per_fasta):
+def query_files_creation(list_with_scaffold_specific_low_cov_reg_lists, fna_file_path, min_length, query_dir,
+                         seq_per_fasta):
 
     """
     This function creates the .fasta query files for a diamond slurm job, out of a input list with the low coverage
@@ -55,7 +55,7 @@ def database_comparison(list_with_scaffold_specific_low_cov_reg_lists, fna_file_
     scaffold_list.pop(0)
 
     # Initialise some parameters
-    fasta_count = 0     # for individual naming at creating of the .fasta files
+    fasta_count = 1     # for individual naming at creating of the .fasta files
     count_added_queries = 0     # Counts how many queries are created overall
     already_added_queries = 0   # Counts how many queries are already added to the fasta file
 
@@ -76,6 +76,14 @@ def database_comparison(list_with_scaffold_specific_low_cov_reg_lists, fna_file_
                 # Possible first cases where the region cant be expanded 250 to the left,
                 # because the (startposition(of the region) - 250) < 0
                 while (current_low_cov_list[current_tuple][0] - int(min_length / 2)) <= 0:
+
+                    # Creating .fasta file, if the current file is full (defined by seq_per_fasta)
+                    if already_added_queries >= seq_per_fasta:
+                        fasta_count += 1
+                        current_fasta.close()
+                        already_added_queries = 0
+                        new_fasta = query_dir + "/" + "temp_in_" + str(fasta_count) + ".fasta"
+                        current_fasta = open(new_fasta, "w")
 
                     # Calculating the expand length
                     region_length = current_low_cov_list[current_tuple][1] - current_low_cov_list[current_tuple][0]
@@ -120,6 +128,14 @@ def database_comparison(list_with_scaffold_specific_low_cov_reg_lists, fna_file_
                         break_value = True
                         break
 
+                    # Creating .fasta file, if the current file is full (defined by seq_per_fasta)
+                    if already_added_queries >= seq_per_fasta:
+                        fasta_count += 1
+                        current_fasta.close()
+                        already_added_queries = 0
+                        new_fasta = query_dir + "/" + "temp_in_" + str(fasta_count) + ".fasta"
+                        current_fasta = open(new_fasta, "w")
+
                     # Calculation the length a region must be expanded
                     region_length = current_low_cov_list[current_tuple][1] - current_low_cov_list[current_tuple][0]
 
@@ -149,6 +165,10 @@ def database_comparison(list_with_scaffold_specific_low_cov_reg_lists, fna_file_
                     if break_value:
                         break
 
+                # Possible last cases where the region cant be expanded 250 to the right,
+                # because (the endposition(of the region) + 250) > sequence length
+                while current_tuple < len(current_low_cov_list):
+
                     # Creating .fasta file, if the current file is full (defined by seq_per_fasta)
                     if already_added_queries >= seq_per_fasta:
                         fasta_count += 1
@@ -157,9 +177,6 @@ def database_comparison(list_with_scaffold_specific_low_cov_reg_lists, fna_file_
                         new_fasta = query_dir + "/" + "temp_in_" + str(fasta_count) + ".fasta"
                         current_fasta = open(new_fasta, "w")
 
-                # Possible last cases where the region cant be expanded 250 to the right,
-                # because (the endposition(of the region) + 250) > sequence length
-                while current_tuple < len(current_low_cov_list):
                     # Calculating the expand length
                     region_length = current_low_cov_list[current_tuple][1] - current_low_cov_list[current_tuple][0]
                     if region_length < min_length:
@@ -186,12 +203,12 @@ def database_comparison(list_with_scaffold_specific_low_cov_reg_lists, fna_file_
                     current_fasta.write(("".join(current_scaffold[1][region_start:region_end]) + "\n"))
                     current_tuple += 1
                     count_added_queries += 1
+                    already_added_queries += 1
 
                 break       # Break because there is only one matching scaffold sequence for each scaffold
 
     # Close the last .fasta file
     current_fasta.close()
-    fasta_count += 1
 
     # User information
     print("Amount of created fasta files: ", fasta_count)
@@ -849,6 +866,11 @@ def filter_out_relevant_results(all_diamond_results, max_detect_dist):
         healing_region_list.append([query_data[0], query_data[3], query_data[4], filtered_query_frameshift_list])
 
     return considered_diamond_hits_list, healing_region_list
+
+
+def calc_diamond_hit_length_distribution(all_diamond_results):
+
+    return None
 
 
 def heal_assembly_file(healing_region_list, input_fna_path, outut_dir):
@@ -1667,6 +1689,46 @@ def transform_txt_to_gff(txt_file_path):
 
 def main():
     print("database comparison main executed")
+
+    assembly_file = "/share/gluster/assemblies/Tdraco/t_draco_pacbio_salsa.FINAL_gap_closed.scaff_seqs_FINAL_pilon_2.fasta"
+    out_dir = "/home/johannes/Desktop/testoutput_dir/"
+
+    testdata = [["HiC_scaffold_1", [(0, 21), (33, 56), (76, 103),
+                                    (100000, 100100), (2000200, 2000500), (2001200, 2001500), (2002200, 2002499),
+                                    (3001200, 3001451), (3002200, 3002452), (3003200, 3003453), (3004200, 3004454),
+                                    (3005200, 3005455), (3006200, 3006456), (3007200, 3007457), (3008200, 3008458),
+                                    (3009200, 3009459), (2010200, 2003460),
+                                    (11000300, 11000700), (11001301, 11001700), (11002302, 11002700),
+                                    (11003303, 11003700), (11004304, 11004700), (11005305, 11005700),
+                                    (11006306, 11006700), (11007307, 11007700), (11008308, 11008700),
+                                    (11009309, 11008700),
+                                    (23937064, 23937064), (23938000, 23938010), (23938020, 23938063)]],
+                ["HiC_scaffold_2", [(0, 21), (100000, 100100), (2000200, 2000500), (2001200, 2001500),
+                                    (2002200, 2002499)]],
+                ["HiC_scaffold_3", [(100000, 100100), (2000200, 2000500), (2001200, 2001300), (2002200, 2002499),
+                                    (3001200, 3001751), (3002200, 3002752), (3003200, 3003753), (3004200, 3004754),
+                                    (3005200, 3005655), (3006200, 3006656), (3007200, 3007657), (3008200, 3008658),
+                                    (3009200, 3009559), (2010200, 2003560)]],
+                ["HiC_scaffold_4", [(140, 500), (2000200, 2000500), (2001200, 2001300), (2002200, 2002499),
+                                    (3001200, 3001751), (3002200, 3002752), (3003200, 3003753), (3004200, 3004754),
+                                    (3005200, 3005655), (3006200, 3006656), (3007200, 3007657), (3008200, 3008658),
+                                    (3009200, 3009559), (2010200, 2003560), (1293422350, 1293422681)]],
+                ["HiC_scaffold_5", [(11009309, 11008700), (3422550, 3422590), (3422600, 3422640)]],
+                ["HiC_scaffold_6", [(1, 20), (76, 103),
+                                    (100000, 100100), (2000200, 2000500), (2001200, 2001500), (2002200, 2002499),
+                                    (3001200, 3001451), (3002200, 3002452), (3003200, 3003453), (3004200, 3004454),
+                                    (3005200, 3005455), (3006200, 3006456), (3007200, 3007457), (3008200, 3008458),
+                                    (3009200, 3009459), (2010200, 2003460),
+                                    (11000300, 11000700), (11001301, 11001700), (11002302, 11002700),
+                                    (11003303, 11003700), (11004304, 11004700), (11005305, 11005700),
+                                    (11006306, 11006700), (11007307, 11007700), (11008308, 11008700),
+                                    (11009309, 11008700),
+                                    (29097736, 29097836)]],
+                ["HiC_scaffold_7", [(22600, 22640)]],
+                ["HiC_scaffold_8", [(76, 103)]],
+                ["HiC_scaffold_9", [(11004304, 11004700)]]]
+
+    query_files_creation(testdata, assembly_file, 300, out_dir, 5)
 
 
 if __name__ == '__main__':

@@ -42,7 +42,8 @@ def main():
 
     compD.create_slurmarry(protein_database, input_dir, output_dir)
 
-    # sbatch --array=1-51 CLCR_slurmarray.slurm sbatch --array=1-5 CLCR_slurmarray.slurm"""
+    # sbatch --array=1-51 CLCR_slurmarray.slurm 
+    # sbatch --array=1-5 CLCR_slurmarray.slurm"""
 
     # Read in the diamond resutls
 
