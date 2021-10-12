@@ -1,4 +1,4 @@
-"""This file contains the functions for the protein database, slurmjob and query creation"""
+"""This file contains the functions for the protein database, slurmjob and queries creation"""
 __author__ = "6947325: Johannes Zieres"
 __credits__ = ""
 __email__ = "johannes.zieres@gmail.com"

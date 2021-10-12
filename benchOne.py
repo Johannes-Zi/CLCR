@@ -1,4 +1,4 @@
-"""First benchmark for the CLCR program """
+"""First benchmark for the CLCR program (determine average cutoff distance)"""
 __author__ = "6947325: Johannes Zieres"
 __credits__ = ""
 __email__ = "johannes.zieres@gmail.com"

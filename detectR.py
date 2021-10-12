@@ -1,4 +1,4 @@
-"""This program is the bruteforce version for detecting low coverage regions in the per base coverage files"""
+"""This file contains the functions for the detection of low coverage regions in the pbc file of an assembly"""
 __author__ = "6947325: Johannes Zieres"
 __credits__ = ""
 __email__ = "johannes.zieres@gmail.com"

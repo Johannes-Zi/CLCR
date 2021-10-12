@@ -1,4 +1,4 @@
-"""Second Benchmark for the CLCR program """
+"""Second Benchmark for the CLCR program (correct frameshift healing)"""
 __author__ = "6947325: Johannes Zieres"
 __credits__ = ""
 __email__ = "johannes.zieres@gmail.com"

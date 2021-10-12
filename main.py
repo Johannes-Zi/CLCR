@@ -1,11 +1,11 @@
 # coding=utf-8
 
-"""This program ... is the main file :)"""
+"""This file ... is the main file :) """
 __author__ = "6947325: Johannes Zieres"
 __credits__ = ""
 __email__ = "johannes.zieres@gmail.com"
 
-import bruteF
+import detectR
 import compD
 
 
