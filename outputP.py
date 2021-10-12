@@ -148,11 +148,23 @@ def read_in_diamond_output(output_dir):
                     # theses function
                     for current_protein_hit in query_hit_list:
 
+                        # !!!!!IMPORTANT STEP!!!!!!
+                        # If the gene of the protein hit lays on the reverse strand, the alignment needs to be inverted
+                        # to fit for the following processing
+                        if current_protein_hit[6] > current_protein_hit[7]:     # Alignment start pos. > end pos.
+                            # Swap the positions to fit the inverted alignment
+                            current_protein_hit[6], current_protein_hit[7] = current_protein_hit[7], \
+                                                                                 current_protein_hit[6]
+
+                            # Reverse the complete query-protein alignment
+                            current_protein_hit[4] = current_protein_hit[4][::-1]   # aligned query part
+                            current_protein_hit[5] = current_protein_hit[5][::-1]   # aligned protein part
+
                         # The placed gaps in the query in the alignment are counted for a correct position calculation
                         query_gap_count = 0
 
                         # Detect frameshifts in aligned query region
-                        for query_pos, char in enumerate(current_protein_hit[4]):
+                        for alignment_pos, char in enumerate(current_protein_hit[4]):
 
                             # Counts how many gaps are inserted into the query before the frameshift position
                             if char == "-":
@@ -162,25 +174,25 @@ def read_in_diamond_output(output_dir):
                                 # Function returns True if the frameshift correlates with a putative intron
                                 wrong_intron = exclude_putative_transition_frameshift(current_protein_hit[4],
                                                                                       current_protein_hit[5],
-                                                                                      query_pos)
+                                                                                      alignment_pos)
 
                                 if not wrong_intron:
                                     # Saves the positions as the python list positions of the first nucleotide in the
                                     # triplet with the frameshift
                                     frameshift_list.append(((current_protein_hit[6] - 1) +
-                                                            (3 * (query_pos - query_gap_count)), "I"))
+                                                            (3 * (alignment_pos - query_gap_count)), "I"))
 
                             elif char == "/":  # Deletion detected
                                 # Function returns True if the frameshift correlates with a putative intron
                                 wrong_intron = exclude_putative_transition_frameshift(current_protein_hit[4],
                                                                                       current_protein_hit[5],
-                                                                                      query_pos)
+                                                                                      alignment_pos)
 
                                 if not wrong_intron:
                                     # Saves the positions as the python list positions of the first nucleotide in the
                                     # triplet with the frameshift
                                     frameshift_list.append(((current_protein_hit[6] - 1) +
-                                                            (3 * (query_pos - query_gap_count)), "D"))
+                                                            (3 * (alignment_pos - query_gap_count)), "D"))
 
                         # Appends the data of the current protein hit to the query specific list
                         processed_query_hit_list[5].append([current_protein_hit[0], current_protein_hit[1],
@@ -267,11 +279,23 @@ def read_in_diamond_output(output_dir):
             # processed, appends those list to the all_diamond_results list, which is the output of theses function
             for current_protein_hit in query_hit_list:
 
+                # !!!!!IMPORTANT STEP!!!!!!
+                # If the gene of the protein hit lays on the reverse strand, the alignment needs to be inverted
+                # to fit for the following processing
+                if current_protein_hit[6] > current_protein_hit[7]:  # Alignment start pos. > end pos.
+                    # Swap the positions to fit the inverted alignment
+                    current_protein_hit[6], current_protein_hit[7] = current_protein_hit[7], \
+                                                                     current_protein_hit[6]
+
+                    # Reverse the complete query-protein alignment
+                    current_protein_hit[4] = current_protein_hit[4][::-1]  # aligned query part
+                    current_protein_hit[5] = current_protein_hit[5][::-1]  # aligned protein part
+
                 # The placed gaps in the query in the alignment are counted for a correct position calculation
                 query_gap_count = 0
 
                 # Detect frameshifts in aligned query region
-                for query_pos, char in enumerate(current_protein_hit[4]):
+                for alignment_pos, char in enumerate(current_protein_hit[4]):
 
                     # Counts how many gaps are inserted into the query before the frameshift position
                     if char == "-":
@@ -281,25 +305,25 @@ def read_in_diamond_output(output_dir):
                         # Function returns True if the frameshift correlates with a putative intron
                         wrong_intron = exclude_putative_transition_frameshift(current_protein_hit[4],
                                                                               current_protein_hit[5],
-                                                                              query_pos)
+                                                                              alignment_pos)
 
                         if not wrong_intron:
                             # Saves the positions as the python list positions of the first nucleotide in the
                             # triplet with the frameshift
                             frameshift_list.append(((current_protein_hit[6] - 1) +
-                                                    (3 * (query_pos - query_gap_count)), "I"))
+                                                    (3 * (alignment_pos - query_gap_count)), "I"))
 
                     elif char == "/":  # Deletion detected
                         # Function returns True if the frameshift correlates with a putative intron
                         wrong_intron = exclude_putative_transition_frameshift(current_protein_hit[4],
                                                                               current_protein_hit[5],
-                                                                              query_pos)
+                                                                              alignment_pos)
 
                         if not wrong_intron:
                             # Saves the positions as the python list positions of the first nucleotide in the
                             # triplet with the frameshift
                             frameshift_list.append(((current_protein_hit[6] - 1) +
-                                                    (3 * (query_pos - query_gap_count)), "D"))
+                                                    (3 * (alignment_pos - query_gap_count)), "D"))
 
                 # Appends the data of the current protein hit to the query specific list
                 processed_query_hit_list[5].append([current_protein_hit[0], current_protein_hit[1],
@@ -337,8 +361,9 @@ def filter_out_relevant_results(all_diamond_results, max_detect_dist):
     The second output list (healing_region_list), contains the combined frameshift information of all Diamond hits per
     query, which means the scaffold, start position of the query in the scaffold, end position of the query in the
     scaffold, and a list with all positions in the query, where frameshifts are detected and need to be healed later.
-    But not all frameshifts, of each by the overlapping heuristic considered hit, are considered for the healing, like
-    described before, so there could be Diamond hits where only a part of the detected frameshifts are considered.
+    Only queries with considered frameshifts are appended in those list!!!
+    But not all frameshifts, of each by the overlapping heuristic considered protein hit, are considered for the healing
+    ,like described before, so there could be Diamond hits where only a part of the detected frameshifts are considered.
     The frameshifts are saved as eg. (20, I) or (12, D), which stands for an insertion 20 base-pairs downstream of the
     query start position, or a deletion 12 base-pair downstream.
     :param all_diamond_results: Output of the read_in_diamond_output_function
@@ -350,7 +375,8 @@ def filter_out_relevant_results(all_diamond_results, max_detect_dist):
 
     # healing_region_list contains the final query information for all queries, and functions as output list
     healing_region_list = []
-    # Contains the complete information of all considered Diamond hits in a format like this:
+    # Contains the complete information of all for healing considered Diamond hits by the overlapping heuristic,
+    # in a format like this:
     # [[scaffold, query start pos. in scaff, query end pos. in scaff., protein_hit, e_value, bit_score,
     # similarity_percentage, [COMPLETEframeshift_list]], ...]
     considered_diamond_hits_list = []
@@ -372,6 +398,7 @@ def filter_out_relevant_results(all_diamond_results, max_detect_dist):
             alignment_end_pos = diamond_hit[6]
 
             # Checks for all already added regions, if the new region is overlapping with one of them
+            # (Overlapping Heuristic)
             for prev_region in current_query_region_coverage:
                 if ((alignment_end_pos >= prev_region[0]) and (alignment_start_pos <= prev_region[0])) or \
                         ((alignment_end_pos >= prev_region[1]) and (alignment_start_pos <= prev_region[1])) or \
@@ -385,6 +412,8 @@ def filter_out_relevant_results(all_diamond_results, max_detect_dist):
                 # Append the new region to the coverage list
                 current_query_region_coverage.append([alignment_start_pos, alignment_end_pos])
 
+                # Stores the frameshifts of the current diamond hit, that were considered in the following healing
+                current_diamond_hit_considered_frameshifts = []
                 # Checks for each detected frameshift in the protein-query alignment of the current Diamond hit if the
                 # frameshift lays in the low cov. region of the current query
                 for single_frameshift in diamond_hit[4]:
@@ -392,25 +421,39 @@ def filter_out_relevant_results(all_diamond_results, max_detect_dist):
                     # Appends the frameshift, when it lays into the low cov. region of the query or right next to it (
                     # distance determined by the max_detect_dist). The previous saved position of each frameshift is
                     # based on the start position of the query, not of the low cov. region
-                    frameshift_pos_in_scaff = query_data[3] + single_frameshift[0]  # query start pos. frameshift pos.
+                    # query start position and frameshift position
+                    frameshift_pos_in_scaff = int(query_data[3]) + single_frameshift[0]
+
+                    print(frameshift_pos_in_scaff)
+
 
                     # Checks the overlapping
-                    if ((frameshift_pos_in_scaff >= (query_data[1] - max_detect_dist)) and
-                       (frameshift_pos_in_scaff <= (query_data[2] + max_detect_dist))):
+                    # (Exlude frameshifts that are not in the low cov. region, or close to them)
+                    if ((frameshift_pos_in_scaff >= (int(query_data[1]) - max_detect_dist)) and
+                       (frameshift_pos_in_scaff <= (int(query_data[2]) + max_detect_dist))):
 
                         # Appends the checked Frameshift to the
-                        filtered_query_frameshift_list += single_frameshift
+                        current_diamond_hit_considered_frameshifts.append((single_frameshift))
+
+                # Adds the considered frameshifts of the current Diamond hit to the list with all considered frameshifts
+                # of the current query
+                filtered_query_frameshift_list += current_diamond_hit_considered_frameshifts
 
                 # Add the considered Diamond hit to the list with all considered protein hits and the corresponding data
                 # in a format like this:
                 # [[scaffold, query start pos. in scaff, query end pos. in scaff., protein_hit, e_value, bit_score,
                 # similarity_percentage, [COMPLETEframeshift_list]], ...]
-                considered_diamond_hits_list.append([query_data[0], query_data[3], query_data[4], diamond_hit[0],
-                                                    diamond_hit[1], diamond_hit[2], diamond_hit[3], diamond_hit[4]])
 
-        # Append the query data to the healing list
+                # If considered for the healing, appends the Diamond hit with the considered frameshifts
+                if current_diamond_hit_considered_frameshifts:
+                    considered_diamond_hits_list.append([query_data[0], query_data[3], query_data[4], diamond_hit[0],
+                                                         diamond_hit[1], diamond_hit[2], diamond_hit[3],
+                                                         current_diamond_hit_considered_frameshifts])
+
+        # Append the query data to the healing list, if there was an considered frameshift
         # scaffold, query start pos. in scaff., query end pos. in scaff., frameshift correction list
-        healing_region_list.append([query_data[0], query_data[3], query_data[4], filtered_query_frameshift_list])
+        if filtered_query_frameshift_list:
+            healing_region_list.append([query_data[0], query_data[3], query_data[4], filtered_query_frameshift_list])
 
     return considered_diamond_hits_list, healing_region_list
 
@@ -422,6 +465,25 @@ def calc_diamond_hit_length_distribution(all_diamond_results):
 
 def main():
     print("Output Processing main executed")
+
+    test_file = "/home/johannes/Desktop/test_output_dir/"
+
+    all_diamond_results = read_in_diamond_output(test_file)
+
+    for x in all_diamond_results:
+        print(x)
+
+    """print("\n")
+
+    considered_diamond_hits_list, healing_region_list = filter_out_relevant_results(all_diamond_results, 10)
+
+    for x in considered_diamond_hits_list:
+        print(x)
+
+    print("\n")
+
+    for x in healing_region_list:
+        print(x)"""
 
 
 if __name__ == '__main__':
