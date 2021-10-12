@@ -424,9 +424,6 @@ def filter_out_relevant_results(all_diamond_results, max_detect_dist):
                     # query start position and frameshift position
                     frameshift_pos_in_scaff = int(query_data[3]) + single_frameshift[0]
 
-                    print(frameshift_pos_in_scaff)
-
-
                     # Checks the overlapping
                     # (Exlude frameshifts that are not in the low cov. region, or close to them)
                     if ((frameshift_pos_in_scaff >= (int(query_data[1]) - max_detect_dist)) and
@@ -465,25 +462,6 @@ def calc_diamond_hit_length_distribution(all_diamond_results):
 
 def main():
     print("Output Processing main executed")
-
-    test_file = "/home/johannes/Desktop/test_output_dir/"
-
-    all_diamond_results = read_in_diamond_output(test_file)
-
-    for x in all_diamond_results:
-        print(x)
-
-    """print("\n")
-
-    considered_diamond_hits_list, healing_region_list = filter_out_relevant_results(all_diamond_results, 10)
-
-    for x in considered_diamond_hits_list:
-        print(x)
-
-    print("\n")
-
-    for x in healing_region_list:
-        print(x)"""
 
 
 if __name__ == '__main__':
