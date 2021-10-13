@@ -3,6 +3,8 @@ __author__ = "6947325: Johannes Zieres"
 __credits__ = ""
 __email__ = "johannes.zieres@gmail.com"
 
+import matplotlib.pyplot as plt
+
 
 def detect_regions(cov_file_path, cov_start, cov_end):
     """
@@ -67,7 +69,7 @@ def detect_regions(cov_file_path, cov_start, cov_end):
     return low_cov_regions
 
 
-def merge_close_reg(input_scaffold_list, merge_distance):
+def merge_close_regions(input_scaffold_list, merge_distance):
 
     """
     Receives the output list of the detect regions function and merges all low cov. regions in each scaffold together if
@@ -275,11 +277,54 @@ def combine_regions_multiple_scaffolds(input_scaffold_list_short, input_scaffold
     return combined_list
 
 
-def low_cov_length_distribution():
+def low_cov_length_distribution_plot(input_scaffold_list, output_path):
 
-    low_cov_length_distribution_list = []
+    """
+    This functions simply calculates the length distribution of all low coverage regions that are handed over. And
+    creates an boxplot out of it, that is saved in the handed over directory.
+    :param input_scaffold_list: output of one of the previous functions
+    :param output_path: complete path to location where the plot should be saved, INCLUDING the plotname and .png
+    :return: length_distribution list and  creates a boxplot at the handed over directory
+    """
 
-    return low_cov_length_distribution_list
+    # Labels for bars
+    tick_labels = ["0-5", "6-25", "25-50", "51-100", "101-250", "250-500", "501-1000", "1001-5000", ">5000"]
+
+    length_distribution = [[5, 0], [25, 0], [50, 0], [100, 0], [250, 0], [500, 0], [1000, 0], [5000, 0],
+                           [float("inf"), 0]]
+
+    # Calculating the length distribution
+    for scaffold_data in input_scaffold_list:
+        for low_cov_region in scaffold_data[1]:
+            region_length = int(low_cov_region[1]) - int(low_cov_region[0])
+
+            for length_range in length_distribution:
+                if region_length <= length_range[0]:
+                    length_range[1] += 1
+                    break
+
+    # X-coordinates of left sides of bars
+    elements = [x for x in range(1, len(length_distribution) + 1)]
+
+    # Heights of bars
+    element_counts = [y[1] for y in length_distribution]
+
+    # Plotting a bar chart
+    plt.barh(elements, element_counts, tick_label=tick_labels, height=0.8, color=["limegreen"], edgecolor="black")
+
+    # Label the picture
+    plt.xlabel("Number of low coverage regions", fontsize=11.5)
+    plt.ylabel("Length in bp", fontsize=11.5)
+    plt.title("Low coverage regions length distribution", fontsize=13, fontweight="bold")
+    plt.xticks(ticks=[20000, 40000, 60000, 80000, 100000, 120000, 140000])
+    plt.xlim(xmax=145000)
+
+    plt.tight_layout()
+
+    # Function saves the plot
+    plt.savefig(output_path, dpi=250)
+
+    return length_distribution
 
 
 def main():
