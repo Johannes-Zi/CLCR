@@ -593,8 +593,8 @@ def create_output_plots(input_file_path, picture_name):
     :return: a png file with the bar graph
     """
 
-    # list containing all alignment cuttoff positions of the input file
-    cuttoff_list = []
+    # list containing all alignment cutoff positions of the input file
+    cutoff_list = []
 
     # read in the input file
     input_file = open(input_file_path)
@@ -602,48 +602,48 @@ def create_output_plots(input_file_path, picture_name):
     # appends all cutoff to the list
     for line in input_file:
         if int(line.strip()) != 0:      # to exclude the very view false detections
-            cuttoff_list.append(int(line.strip()))
+            cutoff_list.append(int(line.strip()))
 
-    # count the amount of cuttoff per position
-    count_cuttoff_list = []
+    # count the amount of cutoff per position
+    count_cutoff_list = []
 
-    for cuttoff in cuttoff_list:
-        new_cuttoff_position = True
+    for cutoff in cutoff_list:
+        new_cutoff_position = True
 
-        for cuttoff_position in count_cuttoff_list:
-            if cuttoff == cuttoff_position[0]:
-                cuttoff_position[1] += 1
-                new_cuttoff_position = False
+        for cutoff_position in count_cutoff_list:
+            if cutoff == cutoff_position[0]:
+                cutoff_position[1] += 1
+                new_cutoff_position = False
                 break
 
-        if new_cuttoff_position:
-            count_cuttoff_list.append([cuttoff, 1])
+        if new_cutoff_position:
+            count_cutoff_list.append([cutoff, 1])
 
     input_file.close()
 
-    # sort the cuttoff list ascending by thier cuttoff positions
-    count_cuttoff_list = sorted(count_cuttoff_list, key=lambda current_cuttoff: int(current_cuttoff[0]))
-    print(count_cuttoff_list)
+    # sort the cutoff list ascending by their cutoff positions
+    count_cutoff_list = sorted(count_cutoff_list, key=lambda current_cuttoff: int(current_cuttoff[0]))
+    print(count_cutoff_list)
 
     # x-coordinates of left sides of bars
-    cuttoff_positions = [x for x in range(1, len(count_cuttoff_list)+1)]
+    cuttoff_positions = [x for x in range(1, len(count_cutoff_list)+1)]
 
     # heights of bars
-    cuttoff_counts = [y[1] for y in count_cuttoff_list]
+    cuttoff_counts = [y[1] for y in count_cutoff_list]
 
     # labels for bars
-    tick_label = [str(z[0]+1) for z in count_cuttoff_list]     # +1 to correct the python list positions to the real pos
+    tick_label = [str(z[0]+1) for z in count_cutoff_list]     # +1 to correct the python list positions to the real pos
 
     # plotting a bar chart
     plt.bar(cuttoff_positions, cuttoff_counts, tick_label=tick_label,
             width=0.8, color=['green'])
 
     # naming the x-axis
-    plt.xlabel('cuttoff positions')
+    plt.xlabel('cutoff positions')
     # naming the y-axis
-    plt.ylabel('cuttoffs per position')
+    plt.ylabel('cutoffs per position')
     # plot title
-    plt.title('Diamond alignment cuttoff distribution')
+    plt.title('Diamond alignment cutoff distribution')
 
     # function saves the plot
     plt.savefig(picture_name + '.png')
