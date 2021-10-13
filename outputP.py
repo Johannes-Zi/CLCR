@@ -6,6 +6,7 @@ __email__ = "johannes.zieres@gmail.com"
 import os
 import glob
 import copy
+import matplotlib.pyplot as plt
 
 
 def exclude_putative_transition_frameshift(query_alignment, subject_alignment, frameshift_position):
@@ -377,8 +378,8 @@ def filter_out_relevant_results(all_diamond_results, max_detect_dist):
     healing_region_list = []
     # Contains the complete information of all for healing considered Diamond hits by the overlapping heuristic,
     # in a format like this:
-    # [[scaffold, query start pos. in scaff, query end pos. in scaff., protein_hit, e_value, bit_score,
-    # similarity_percentage, [COMPLETEframeshift_list]], ...]
+    # [[scaffold, low cov. start pos in scaffold, low cov. end pos. ,query start pos., query end pos.,
+    # protein_hit, e_value, bit_score, similarity_percentage, [COMPLETEframeshift_list]], ...]
     considered_diamond_hits_list = []
 
     for query_data in all_diamond_results:
@@ -438,14 +439,14 @@ def filter_out_relevant_results(all_diamond_results, max_detect_dist):
 
                 # Add the considered Diamond hit to the list with all considered protein hits and the corresponding data
                 # in a format like this:
-                # [[scaffold, query start pos. in scaff, query end pos. in scaff., protein_hit, e_value, bit_score,
-                # similarity_percentage, [COMPLETEframeshift_list]], ...]
+                # [[scaffold, low cov. start pos in scaffold, low cov. end pos. ,query start pos., query end pos.,
+                # protein_hit, e_value, bit_score, similarity_percentage, [COMPLETEframeshift_list]], ...]
 
                 # If considered for the healing, appends the Diamond hit with the considered frameshifts
                 if current_diamond_hit_considered_frameshifts:
-                    considered_diamond_hits_list.append([query_data[0], query_data[3], query_data[4], diamond_hit[0],
-                                                         diamond_hit[1], diamond_hit[2], diamond_hit[3],
-                                                         current_diamond_hit_considered_frameshifts])
+                    considered_diamond_hits_list.append([query_data[0], query_data[1], query_data[2], query_data[3],
+                                                         query_data[4], diamond_hit[0], diamond_hit[1], diamond_hit[2],
+                                                         diamond_hit[3], current_diamond_hit_considered_frameshifts])
 
         # Append the query data to the healing list, if there was an considered frameshift
         # scaffold, query start pos. in scaff., query end pos. in scaff., frameshift correction list
@@ -455,9 +456,52 @@ def filter_out_relevant_results(all_diamond_results, max_detect_dist):
     return considered_diamond_hits_list, healing_region_list
 
 
-def calc_diamond_hit_length_distribution(all_diamond_results):
+def considered_diamond_hit_length_distribution_plot(considered_diamond_hits_list, output_path):
+    """
+    This functions simply calculates the length distribution of all low coverage regions that are used  in the healing
+    process. And creates an boxplot out of it, that is saved in the handed over directory.
+    :param considered_diamond_hits_list: output of one of the filter_out_relevant_results function
+    :param output_path: complete path to location where the plot should be saved, INCLUDING the plotname and .png
+    :return: length_distribution list and  creates a boxplot in the handed over directory
+    """
 
-    return None
+    # Labels for bars
+    tick_labels = ["0-5", "6-25", "25-50", "51-100", "101-250", "250-500", "501-1000", "1001-5000", ">5000"]
+
+    length_distribution = [[5, 0], [25, 0], [50, 0], [100, 0], [250, 0], [500, 0], [1000, 0], [5000, 0],
+                           [float("inf"), 0]]
+
+    # Calculating the length distribution
+    for protein_hit in considered_diamond_hits_list:
+        region_length = int(protein_hit[2]) - int(protein_hit[1])
+
+        for length_range in length_distribution:
+            if region_length <= length_range[0]:
+                length_range[1] += 1
+                break
+
+    # X-coordinates of left sides of bars
+    elements = [x for x in range(1, len(length_distribution) + 1)]
+
+    # Heights of bars
+    element_counts = [y[1] for y in length_distribution]
+
+    # Plotting a bar chart
+    plt.barh(elements, element_counts, tick_label=tick_labels, height=0.8, color=["limegreen"], edgecolor="black")
+
+    # Label the picture
+    plt.xlabel("Number of low coverage regions", fontsize=11.5)
+    plt.ylabel("Length in bp", fontsize=11.5)
+    plt.title("Low coverage regions length distribution", fontsize=13, fontweight="bold")
+    plt.xticks(ticks=[20000, 40000, 60000, 80000, 100000, 120000, 140000])
+    plt.xlim(xmax=145000)
+
+    plt.tight_layout()
+
+    # Function saves the plot
+    plt.savefig(output_path, dpi=250)
+
+    return length_distribution
 
 
 def main():
