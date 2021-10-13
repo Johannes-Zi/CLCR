@@ -46,7 +46,7 @@ def main():
     compD.query_files_creation(short_low_cov_regions, assembly_file, 500, short_read_query_dir, 5000)
     # """
 
-    # Sending the slurm jobarray to the cluster
+    """# Sending the slurm jobarray to the cluster
     protein_database = "/home/johannes/Desktop/trachinus_draco/protein_db/protein_db.dmnd"
     input_dir = "/home/johannes/Desktop/trachinus_draco/short_read_queries/"
     output_dir = "/home/johannes/Desktop/trachinus_draco/short_read_queries_output/"
@@ -54,26 +54,26 @@ def main():
     compD.create_slurmarry(protein_database, input_dir, output_dir)
 
     # sbatch --array=1-51 CLCR_slurmarray.slurm 
-    # sbatch --array=1-5 CLCR_slurmarray.slurm"""
+    # sbatch --array=1-5 CLCR_slurmarray.slurm
+    # """
 
-    """"# Read in the diamond resutls
+    # Read in the diamond resutls
 
     output_dir = "/home/johannes/Desktop/trachinus_draco/short_read_queries_output/"
 
-    output_region_list, healing_region_list = compD.read_in_diamond_output(output_dir)
+    all_diamond_results = outputP.read_in_diamond_output(output_dir)
+
+    considered_diamond_hits_list, healing_region_list = outputP.filter_out_relevant_results(all_diamond_results, 10)
 
     found_frameshift_count = 0
     regions_with_frameshift = 0
     queries_with_diamond_hit = 0
-    for query in healing_region_list:
-        queries_with_diamond_hit += 1
-        if query[3]:
-            found_frameshift_count += len(query[3])
-            regions_with_frameshift += 1
+
+    """Das folgende hier in der read in diamond output funktion berchenen"""
 
     print(found_frameshift_count, " frameshifts found")
     print(regions_with_frameshift, " regions with at least one frameshift found")
-    print(queries_with_diamond_hit, " queries had at least one Diamond hit")
+    print(len(all_diamond_results), " queries had at least one Diamond hit")
 
     # 44639  frameshifts found
     # 13013  regions with at least one frameshift are detected
@@ -84,7 +84,7 @@ def main():
 
     new_assembly_dir = "/home/johannes/Desktop/trachinus_draco/healed_assembly/"
 
-    compD.heal_assembly_file(healing_region_list, old_assembly, new_assembly_dir)
+    outputC.heal_assembly_file(healing_region_list, old_assembly, new_assembly_dir)
     
     #"""
 
