@@ -382,6 +382,13 @@ def filter_out_relevant_results(all_diamond_results, max_detect_dist):
     # protein_hit, e_value, bit_score, similarity_percentage, [COMPLETEframeshift_list]], ...]
     considered_diamond_hits_list = []
 
+    # Counts how many frameshifts are considered in the healing process
+    considered_frameshifts_count = 0
+
+    # Counts how many frameshifts are considered by the overlapping heuristic, includes the frameshifts outside of low
+    # cov. regions, excludes those at putative intron transition positions.
+    frameshifts_detected = 0
+
     for query_data in all_diamond_results:
 
         # Saves the regions of the query that are already covered, by saving the start and end positions in the query of
@@ -425,13 +432,16 @@ def filter_out_relevant_results(all_diamond_results, max_detect_dist):
                     # query start position and frameshift position
                     frameshift_pos_in_scaff = int(query_data[3]) + single_frameshift[0]
 
-                    # Checks the overlapping
+                    frameshifts_detected += 1
+
+                    # Checks the overlapping with the low cov. region
                     # (Exlude frameshifts that are not in the low cov. region, or close to them)
                     if ((frameshift_pos_in_scaff >= (int(query_data[1]) - max_detect_dist)) and
                        (frameshift_pos_in_scaff <= (int(query_data[2]) + max_detect_dist))):
 
                         # Appends the checked Frameshift to the
                         current_diamond_hit_considered_frameshifts.append((single_frameshift))
+                        considered_frameshifts_count += 1
 
                 # Adds the considered frameshifts of the current Diamond hit to the list with all considered frameshifts
                 # of the current query
@@ -452,6 +462,10 @@ def filter_out_relevant_results(all_diamond_results, max_detect_dist):
         # scaffold, query start pos. in scaff., query end pos. in scaff., frameshift correction list
         if filtered_query_frameshift_list:
             healing_region_list.append([query_data[0], query_data[3], query_data[4], filtered_query_frameshift_list])
+
+    print(considered_frameshifts_count, " Frameshifts are considered in the healing process")
+    print(frameshifts_detected, " Frameshifts are considered by the overlapping heuristic, regardless if they are in "
+                                "the original low cov or nor, putative intron transition frameshift excluded")
 
     return considered_diamond_hits_list, healing_region_list
 
@@ -487,17 +501,16 @@ def considered_diamond_hit_length_distribution_plot(considered_diamond_hits_list
     element_counts = [y[1] for y in length_distribution]
 
     # Plotting a bar chart
-    plt.barh(elements, element_counts, tick_label=tick_labels, height=0.8, color=["limegreen"], edgecolor="black")
+    plt.barh(elements, element_counts, tick_label=tick_labels, height=0.8, color=["yellow"], edgecolor="black")
 
     # Label the picture
     plt.xlabel("Number of low coverage regions", fontsize=11.5)
     plt.ylabel("Length in bp", fontsize=11.5)
     plt.title("Low coverage regions length distribution", fontsize=13, fontweight="bold")
-    plt.xticks(ticks=[20000, 40000, 60000, 80000, 100000, 120000, 140000])
-    plt.xlim(xmax=145000)
 
     plt.tight_layout()
 
+    print("figure saved")
     # Function saves the plot
     plt.savefig(output_path, dpi=250)
 
