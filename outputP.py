@@ -480,7 +480,7 @@ def considered_diamond_hit_length_distribution_plot(considered_diamond_hits_list
     """
 
     # Labels for bars
-    tick_labels = ["0-5", "6-25", "25-50", "51-100", "101-250", "250-500", "501-1000", "1001-5000", ">5000"]
+    tick_labels = ["1-5", "6-25", "25-50", "51-100", "101-250", "250-500", "501-1000", "1001-5000", ">5000"]
 
     length_distribution = [[5, 0], [25, 0], [50, 0], [100, 0], [250, 0], [500, 0], [1000, 0], [5000, 0],
                            [float("inf"), 0]]
