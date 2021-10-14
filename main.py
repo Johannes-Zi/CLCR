@@ -78,7 +78,10 @@ def main():
 
     new_assembly_dir = "/home/johannes/Desktop/trachinus_draco/healed_assembly/"
 
-    outputC.heal_assembly_file(healing_region_list, old_assembly, new_assembly_dir)
+    new_fna_file_path, healing_position_distribution = outputC.heal_assembly_file(healing_region_list, old_assembly,
+                                                                                  new_assembly_dir)
+
+    #print(healing_position_distribution)
     
     #"""
 
