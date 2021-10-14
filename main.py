@@ -65,22 +65,16 @@ def main():
 
     considered_diamond_hits_list, healing_region_list = outputP.filter_out_relevant_results(all_diamond_results, 10)
 
-    found_frameshift_count = 0
-    regions_with_frameshift = 0
-    queries_with_diamond_hit = 0
+    # output_path = "/home/johannes/Desktop/considered_hits_len_distribution.png"
+    # length_distribution = outputP.considered_diamond_hit_length_distribution_plot(considered_diamond_hits_list,
+    #                                                                              output_path)
+    # print(length_distribution)
 
-    """Das folgende hier in der read in diamond output funktion berchenen"""
-
-    print(found_frameshift_count, " frameshifts found")
-    print(regions_with_frameshift, " regions with at least one frameshift found")
+    print(len(healing_region_list), " queries with at least one frameshift found")
     print(len(all_diamond_results), " queries had at least one Diamond hit")
 
-    # 44639  frameshifts found
-    # 13013  regions with at least one frameshift are detected
-    # 44637  queries had at least one Diamond hit
-
     old_assembly = "/share/gluster/assemblies/Tdraco/" \
-                    "t_draco_pacbio_salsa.FINAL_gap_closed.scaff_seqs_FINAL_pilon_2.fasta"
+                   "t_draco_pacbio_salsa.FINAL_gap_closed.scaff_seqs_FINAL_pilon_2.fasta"
 
     new_assembly_dir = "/home/johannes/Desktop/trachinus_draco/healed_assembly/"
 
