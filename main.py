@@ -81,7 +81,7 @@ def main():
     new_fna_file_path, healing_position_distribution = outputC.heal_assembly_file(healing_region_list, old_assembly,
                                                                                   new_assembly_dir)
 
-    #print(healing_position_distribution)
+    # print(healing_position_distribution)
     
     #"""
 
