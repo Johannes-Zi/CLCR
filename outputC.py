@@ -24,6 +24,7 @@ def heal_assembly_file(healing_region_list, input_fna_path, outut_dir):
     temp_scaffold = []  # Contains the current scaffold
     current_header = ""  # Containing the header of the current scaffold
 
+    print("Read in assembly file")
     # Filling the .fna region list/ reading in the original assembly
     for line in input_fna_file:
 
@@ -44,8 +45,6 @@ def heal_assembly_file(healing_region_list, input_fna_path, outut_dir):
     # Delete the first empty initialising element
     scaffold_list.pop(0)
 
-    print(scaffold_list[0][0], len(scaffold_list[0][1]), scaffold_list[0][1][0:10])
-
     # Correct the frameshifts
     # Inserting the N's from the end to the beginning, to prevent the necessity of adapting the insertion position in
     # dependency to the previous inserted frameshifts
@@ -53,20 +52,24 @@ def heal_assembly_file(healing_region_list, input_fna_path, outut_dir):
     # but the reverse option also sorts the scaffolds descending
     sorted_healing_region_list = sorted(healing_region_list, reverse=True,  key=lambda temp_query: (temp_query[0],
                                                                                                     temp_query[1]))
-    print("sorted")
+    print("Queries sorted")
     count = 0
+
+    # List with the distance of each healed position to the previous healed position
+    healing_position_distribution = []
 
     for query in sorted_healing_region_list:
         # Search the corresponding scaffold
+        print("Query", count)
+
+        # Saves the position in scaffold of the previous healed frameshift, initialised new for each
+        previous_healing_position = None
+
         for scaffold in scaffold_list:
             # Case where matching scaffold is found
             if scaffold[0] == query[0]:
                 query_start_pos = int(query[1])
                 count += 1
-                if count == 1200:
-                    print("10% more")
-                    count = 0
-
                 # Second sort step, now the frameshift positions in each query are sorted descending
                 temp_sorted_query = sorted(query[3], reverse=True,  key=lambda temp_query: temp_query[0])
 
@@ -79,10 +82,25 @@ def heal_assembly_file(healing_region_list, input_fna_path, outut_dir):
                     else:
                         scaffold[1] = scaffold[1][:(query_start_pos + frameshift_position[0])] + ["N"] + ["N"] + \
                                       scaffold[1][(query_start_pos + frameshift_position[0]):]
+
+                    # If case for start case where no  previous region in current scaffold exists
+                    if previous_healing_position:
+                        calculated_distance = previous_healing_position - (query_start_pos + frameshift_position)
+                        healing_position_distribution.append(calculated_distance)
+                        previous_healing_position = (query_start_pos + frameshift_position)
+
+                    # Initialise value with first position of new scaffold
+                    else:
+                        previous_healing_position = (query_start_pos + frameshift_position)
+                    # Calculate the distance of the current healing position to the previous healed position
+
                 break
 
+
+    """Hier die distribution noch vereinfachen wie bei den vorherigen für übersichtlichen plot...."""
+
     # Create the new assembly .fna file path, located in the same dir as the original assembly file
-    new_fna_file_path = outut_dir + "new_fna_file.txt"
+    new_fna_file_path = outut_dir + "new_fna_file.fna"
 
     print("create new assembly file")
 
@@ -106,7 +124,7 @@ def heal_assembly_file(healing_region_list, input_fna_path, outut_dir):
 
     new_fna_file.close()
 
-    return new_fna_file_path
+    return new_fna_file_path, healing_position_distribution
 
 
 def create_gff_adaption_list(healing_region_list):
@@ -827,6 +845,9 @@ def transform_txt_to_gff(txt_file_path):
 def main():
     print("Output Creation main executed")
 
+    x = int
+    y = x - 10
 
+    print(y)
 if __name__ == '__main__':
     main()
