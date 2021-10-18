@@ -60,7 +60,8 @@ def heal_assembly_file(healing_region_list, input_fna_path, outut_dir):
 
     for query in sorted_healing_region_list:
         # Search the corresponding scaffold
-        print("Query", count)
+        print("\033[A                             \033[A")
+        print("Current Query", count)
 
         # Saves the position in scaffold of the previous healed frameshift, initialised new for each
         previous_healing_position = None
@@ -83,21 +84,31 @@ def heal_assembly_file(healing_region_list, input_fna_path, outut_dir):
                         scaffold[1] = scaffold[1][:(query_start_pos + frameshift_position[0])] + ["N"] + ["N"] + \
                                       scaffold[1][(query_start_pos + frameshift_position[0]):]
 
-                    # If case for start case where no  previous region in current scaffold exists
+                    # If for the case where the first position in scaffold was already appended (so for all following
+                    # positions in the current scaffold)
                     if previous_healing_position:
-                        calculated_distance = previous_healing_position - (query_start_pos + frameshift_position)
+                        calculated_distance = previous_healing_position - (query_start_pos + frameshift_position[0])
                         healing_position_distribution.append(calculated_distance)
-                        previous_healing_position = (query_start_pos + frameshift_position)
+                        previous_healing_position = (query_start_pos + frameshift_position[0])
 
                     # Initialise value with first position of new scaffold
                     else:
-                        previous_healing_position = (query_start_pos + frameshift_position)
+                        previous_healing_position = (query_start_pos + frameshift_position[0])
                     # Calculate the distance of the current healing position to the previous healed position
 
                 break
 
+    simplified_distance_distribution = [[0, 0], [5, 0], [10, 0], [25, 0], [50, 0], [250, 0], [500, 0], [1000, 0],
+                                        [5000, 0], [float("inf"), 0]]
 
-    """Hier die distribution noch vereinfachen wie bei den vorherigen für übersichtlichen plot...."""
+    # Assign each distance to a distance "range" for a better overview
+    for calculated_distance in healing_position_distribution:
+
+        # Search the matching "range-group"
+        for distance_range in simplified_distance_distribution:
+            if calculated_distance <= distance_range[0]:
+                distance_range[1] += 1
+                break
 
     # Create the new assembly .fna file path, located in the same dir as the original assembly file
     new_fna_file_path = outut_dir + "new_fna_file.fna"
@@ -124,7 +135,7 @@ def heal_assembly_file(healing_region_list, input_fna_path, outut_dir):
 
     new_fna_file.close()
 
-    return new_fna_file_path, healing_position_distribution
+    return new_fna_file_path, simplified_distance_distribution
 
 
 def create_gff_adaption_list(healing_region_list):
