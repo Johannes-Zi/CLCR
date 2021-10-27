@@ -856,9 +856,6 @@ def transform_txt_to_gff(txt_file_path):
 def main():
     print("Output Creation main executed")
 
-    x = int
-    y = x - 10
 
-    print(y)
 if __name__ == '__main__':
     main()
