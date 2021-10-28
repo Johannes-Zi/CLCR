@@ -470,12 +470,16 @@ def filter_out_relevant_results(all_diamond_results, max_detect_dist):
     return considered_diamond_hits_list, healing_region_list
 
 
-def considered_diamond_hit_length_distribution_plot(considered_diamond_hits_list, output_path):
+def considered_diamond_hit_length_distribution_plot(considered_diamond_hits_list, output_path,
+                                                    original_len_distribution):
     """
     This functions simply calculates the length distribution of all low coverage regions that are used  in the healing
     process. And creates an boxplot out of it, that is saved in the handed over directory.
+    The displayed percentage in the bars, is the percentage of the original created queries in that length range, that
+    were later considered in the healing process/ healed.
     :param considered_diamond_hits_list: output of one of the filter_out_relevant_results function
     :param output_path: complete path to location where the plot should be saved, INCLUDING the plotname and .png
+    :param original_len_distribution: length distribution of the low cov. regions that were used as queries
     :return: length_distribution list and  creates a boxplot in the handed over directory
     """
 
@@ -485,14 +489,30 @@ def considered_diamond_hit_length_distribution_plot(considered_diamond_hits_list
     length_distribution = [[5, 0], [25, 0], [50, 0], [100, 0], [250, 0], [500, 0], [1000, 0], [5000, 0],
                            [float("inf"), 0]]
 
+    print(considered_diamond_hits_list[0])
+
+    # List which saves the considered low cov regions, to prevent double counting, when more than one protein hit per
+    # query was used in the healing step
+    considered_low_cov_regions = []
+
     # Calculating the length distribution
     for protein_hit in considered_diamond_hits_list:
-        region_length = int(protein_hit[2]) - int(protein_hit[1])
+        low_cov_region_pos = [int(protein_hit[1]), int(protein_hit[2])]
+        if low_cov_region_pos not in considered_low_cov_regions:
+            considered_low_cov_regions.append(low_cov_region_pos)
+            region_length = int(low_cov_region_pos[1]) - int(low_cov_region_pos[0])
+            for length_range in length_distribution:
+                if region_length <= length_range[0]:
+                    length_range[1] += 1
+                    break
 
-        for length_range in length_distribution:
-            if region_length <= length_range[0]:
-                length_range[1] += 1
-                break
+    # Calculate the percentages of how many of the original low cov regions were then considered in the healing
+    # regarding to their length class
+    percentage_distribution = []
+
+    for position in range(len(length_distribution)):
+        considered_percentage = length_distribution[position][1] / (original_len_distribution[position][1]/100)
+        percentage_distribution.append(str(round(considered_percentage, 2)) + "%")
 
     # X-coordinates of left sides of bars
     elements = [x for x in range(1, len(length_distribution) + 1)]
@@ -503,10 +523,17 @@ def considered_diamond_hit_length_distribution_plot(considered_diamond_hits_list
     # Plotting a bar chart
     plt.barh(elements, element_counts, tick_label=tick_labels, height=0.8, color=["yellow"], edgecolor="black")
 
+    percentagelabel_position = max(element_counts) * 0.035
+
+    # Label the bars
+    for index, data in enumerate(element_counts):
+        plt.text(y=index + 0.9, x=((data/2) - percentagelabel_position), s=f"{percentage_distribution[index]}",
+                 fontdict=dict(fontsize=8))
+
     # Label the picture
     plt.xlabel("Number of low coverage regions", fontsize=11.5)
     plt.ylabel("Length in bp", fontsize=11.5)
-    plt.title("Low coverage regions length distribution", fontsize=13, fontweight="bold")
+    plt.title("Healed low coverage regions length distribution", fontsize=13, fontweight="bold")
 
     plt.tight_layout()
 
