@@ -7,6 +7,7 @@ import os
 import glob
 import copy
 import matplotlib.pyplot as plt
+import pandas as pd
 
 
 def exclude_putative_transition_frameshift(query_alignment, subject_alignment, frameshift_position):
@@ -542,6 +543,42 @@ def considered_diamond_hit_length_distribution_plot(considered_diamond_hits_list
     plt.savefig(output_path, dpi=250)
 
     return length_distribution
+
+
+def read_in_toga_lossgene_file(unhealed_file_path_1, healed_file_path_2):
+    """
+    Small function for evaluating the TOGA loss_summ_data.tsv files
+    :param unhealed_file_path_1: path
+    :param healed_file_path_2:
+    :return:
+    """
+
+    # Read in the tsv files with different separator
+    column_names = ["needless", "gene", "status"]
+    dataframe_unhealed = pd.read_csv(unhealed_file_path_1, sep='\t', header=None, names=column_names)
+    dataframe_healed = pd.read_csv(healed_file_path_2, sep='\t', header=None, names=column_names)
+
+    gene_df_unhealed = dataframe_unhealed[dataframe_unhealed['needless'] == 'GENE']
+    print(gene_df_unhealed["status"].value_counts())
+    print("Length: ", len(gene_df_unhealed.index))
+
+    gene_df_healed = dataframe_healed[dataframe_healed['needless'] == 'GENE']
+    print(gene_df_healed["status"].value_counts())
+    print("Length: ", len(gene_df_healed.index))
+
+    """    print("##### Dataframes #####")
+    print("\n")
+    print("Unhealed")
+    print("Length: ", len(dataframe_unhealed.index))
+    print(dataframe_unhealed.head())
+    print("\n")
+    print("Healed")
+    print("Length: ", len(dataframe_healed.index))
+    print(dataframe_healed.head())
+    print("\n")
+
+    print(dataframe_unhealed["needless"].value_counts("GENE"))
+    print(dataframe_healed["status"].value_counts())"""
 
 
 def main():

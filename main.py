@@ -29,8 +29,10 @@ def main():
     short_low_cov_regions = detectR.merge_close_regions(short_low_cov_regions, 250)
 
     # Create length distribution plot of the
-    # len_distribution = low_cov_length_distribution_plot(short_low_cov_regions,
-    #                                                    "/home/johannes/Desktop/low_cov_len_distribution_merged.png")
+    len_distribution = detectR.low_cov_length_distribution_plot(short_low_cov_regions,
+                                                       "/home/johannes/Desktop/low_cov_len_distribution_merged.png")
+    print("Calculated length distribution")
+    print(len_distribution)
 
     region_count = 0
     for scaffold in short_low_cov_regions:
@@ -53,11 +55,10 @@ def main():
 
     compD.create_slurmarry(protein_database, input_dir, output_dir)
 
-    # sbatch --array=1-51 CLCR_slurmarray.slurm 
-    # sbatch --array=1-5 CLCR_slurmarray.slurm
+    # sbatch --array=1-51 CLCR_slurmarray.slurm
     # """
 
-    # Read in the diamond resutls
+    """# Read in the diamond results
 
     output_dir = "/home/johannes/Desktop/trachinus_draco/short_read_queries_output/"
 
@@ -65,10 +66,12 @@ def main():
 
     considered_diamond_hits_list, healing_region_list = outputP.filter_out_relevant_results(all_diamond_results, 10)
 
-    # output_path = "/home/johannes/Desktop/considered_hits_len_distribution.png"
-    # length_distribution = outputP.considered_diamond_hit_length_distribution_plot(considered_diamond_hits_list,
-    #                                                                              output_path)
-    # print(length_distribution)
+    output_path = "/home/johannes/Desktop/considered_hits_len_distribution.png"
+    merged_len_dist = [[5, 71975], [25, 29666], [50, 24082], [100, 32263], [250, 35836], [500, 31516], [1000, 17666],
+                       [5000, 9168], [float("inf"), 695]]
+    length_distribution = outputP.considered_diamond_hit_length_distribution_plot(considered_diamond_hits_list,
+                                                                                  output_path, merged_len_dist)
+    print(length_distribution)
 
     print(len(healing_region_list), " queries with at least one frameshift found")
     print(len(all_diamond_results), " queries had at least one Diamond hit")
@@ -85,6 +88,12 @@ def main():
     
     #"""
 
+    # Evaluate the TOGA results
+
+    HLtraDra1_file_path = "/home/johannes/Desktop/trachinus_draco/TOGA_run_1_output/loss_summ_data_HLtraDra1.tsv"
+    HLtraDra3_file_path = "/home/johannes/Desktop/trachinus_draco/TOGA_run_1_output/loss_summ_data_HLtraDra3.tsv"
+
+    outputP.read_in_toga_lossgene_file(HLtraDra1_file_path, HLtraDra3_file_path)
 
 if __name__ == '__main__':
     main()
