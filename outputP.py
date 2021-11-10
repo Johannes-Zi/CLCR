@@ -7,7 +7,9 @@ import os
 import glob
 import copy
 import matplotlib.pyplot as plt
+from matplotlib.colors import ListedColormap
 import pandas as pd
+import seaborn as sns
 
 
 def exclude_putative_transition_frameshift(query_alignment, subject_alignment, frameshift_position):
@@ -560,20 +562,91 @@ def read_in_toga_lossgene_file(unhealed_file_path_1, healed_file_path_2):
 
     gene_df_unhealed = dataframe_unhealed[dataframe_unhealed['type'] == 'GENE']
     #print(gene_df_unhealed.head())
-    print(gene_df_unhealed["status"].value_counts())
-    print("Length: ", len(gene_df_unhealed.index))
+    #print(gene_df_unhealed["status"].value_counts())
+    #print("Length: ", len(gene_df_unhealed.index))
 
     gene_df_healed = dataframe_healed[dataframe_healed['type'] == 'GENE']
     #print(gene_df_healed.head())
-    print(gene_df_healed["status"].value_counts())
-    print("Length: ", len(gene_df_healed.index))
+    #print(gene_df_healed["status"].value_counts())
+    #print("Length: ", len(gene_df_healed.index))
 
     combined_df = pd.merge(gene_df_unhealed, gene_df_healed, how="inner",
                            suffixes=("_unhealed", "_healed"), on="gene").drop(columns=["type_healed", "type_unhealed"])
 
-    print(combined_df.head())
-    print(combined_df.value_counts())
-    print("Length: ", len(combined_df.index))
+    results_dataframe = combined_df.value_counts()
+    return results_dataframe
+
+
+def create_toga_result_plot(results_dataframe):
+    """
+
+    :return:
+    """
+
+    sns.set_style("whitegrid")
+
+    status_type_list = ["I", "PI", "UL", "L", "M", "PM", "PG"]
+
+    manual_noob_list_total = [60, 2, -61, -8, 9, -2, 0]
+
+    plot_dataframe = pd.DataFrame(data=manual_noob_list_total, index=status_type_list)
+    print(plot_dataframe)
+
+    custom_colours = ["forestgreen", "seagreen", "goldenrod", "darkorange", "indianred", "firebrick", "grey"]
+
+    ax_total = plot_dataframe.plot.bar(color=custom_colours, rot=0, figsize=(8, 5))
+    ax_total.set_ylim(-130, 70)
+    ax_total.legend(loc='upper right')
+    ax_total.set_ylabel("amount of genes")
+    ax_total.set_title("Total gene status shift")
+
+    figure_total = ax_total.get_figure()
+    figure_total.savefig("/home/johannes/Desktop/Toga_total.png", dpi=300)
+
+    manual_noob_list_loss = [[0, 0, -56, -4, -1, 0, 0],
+                              [0, 0, -2, 0, 0, 0, 0],
+                              [-111, -4, 0, -25, 0, 0, 0],
+                              [0, 0, -21, 0, 0, 0, 0],
+                              [0, 0, 0, -1, 0, 0, 0],
+                              [0, 0, 0, -2, 0, 0, 0],
+                              [0, 0, 0, 0, 0, 0, 0]]
+
+    plot_dataframe = pd.DataFrame(data=manual_noob_list_loss, columns=status_type_list, index=status_type_list)
+    print(plot_dataframe)
+
+    custom_colours = ["forestgreen", "seagreen", "goldenrod", "darkorange", "indianred", "firebrick", "grey"]
+
+    ax_total = plot_dataframe.plot.bar(stacked=True, color=custom_colours, rot=0, figsize=(8, 5))
+    ax_total.set_ylim(-150, 0)
+    ax_total.legend(loc='lower right')
+    ax_total.set_ylabel("amount of genes")
+    ax_total.set_title("Gene status negative shift")
+
+    figure_total = ax_total.get_figure()
+    figure_total.savefig("/home/johannes/Desktop/Toga_loss.png", dpi=400)
+
+    manual_noob_list_gain = [[0, 0, 111, 10, 0, 0, 0],
+                             [0, 0, 4, 0, 0, 0, 0],
+                             [56, 2, 0, 21, 0, 0, 0],
+                             [4, 0, 25, 0, 1, 2, 0],
+                             [1, 0, 0, 9, 0, 0, 0],
+                             [0, 0, 0, 0, 0, 0, 0],
+                             [0, 0, 0, 0, 0, 0, 0]]
+
+    plot_dataframe = pd.DataFrame(data=manual_noob_list_gain, columns=status_type_list, index=status_type_list)
+    print(plot_dataframe)
+
+    custom_colours = ["forestgreen", "seagreen", "goldenrod", "darkorange", "indianred", "firebrick", "grey"]
+
+    ax_total = plot_dataframe.plot.bar(stacked=True, color=custom_colours, rot=0, figsize=(8, 5), legend=False)
+    ax_total.set_ylim(0, 150)
+    ax_total.set_ylabel("amount of genes")
+    ax_total.set_title("Gene status flow")
+
+    figure_total = ax_total.get_figure()
+    figure_total.savefig("/home/johannes/Desktop/Toga_gain.png", dpi=400)
+
+
 
 
 def main():

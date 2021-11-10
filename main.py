@@ -93,7 +93,10 @@ def main():
     HLtraDra1_file_path = "/home/johannes/Desktop/trachinus_draco/TOGA_run_1_output/loss_summ_data_HLtraDra1.tsv"
     HLtraDra3_file_path = "/home/johannes/Desktop/trachinus_draco/TOGA_run_1_output/loss_summ_data_HLtraDra3.tsv"
 
-    outputP.read_in_toga_lossgene_file(HLtraDra1_file_path, HLtraDra3_file_path)
+    results_dataframe = outputP.read_in_toga_lossgene_file(HLtraDra1_file_path, HLtraDra3_file_path)
+
+    outputP.create_toga_result_plot(results_dataframe)
+
 
 if __name__ == '__main__':
     main()
