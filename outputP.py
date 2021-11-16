@@ -470,6 +470,19 @@ def filter_out_relevant_results(all_diamond_results, max_detect_dist):
     print(frameshifts_detected, " Frameshifts are considered by the overlapping heuristic, regardless if they are in "
                                 "the original low cov or nor, putative intron transition frameshift excluded")
 
+    # Calculate the ratio between healed insertions and deletions
+    deletion_count = 0
+    insertion_count = 0
+    for query in healing_region_list:
+        for frameshift_pos in query[3]:
+            if frameshift_pos[1] == "D":
+                deletion_count += 1
+            else:
+                insertion_count += 1
+
+    print("Amount of considered insertions in the healing process: ", insertion_count)
+    print("Amount of considered deletions in the healing process: ", deletion_count)
+
     return considered_diamond_hits_list, healing_region_list
 
 
@@ -583,6 +596,8 @@ def create_toga_result_plot(results_dataframe):
     :return:
     """
 
+    print(results_dataframe)
+
     sns.set_style("whitegrid")
 
     status_type_list = ["I", "PI", "UL", "L", "M", "PM", "PG"]
@@ -606,7 +621,7 @@ def create_toga_result_plot(results_dataframe):
     manual_noob_list_loss = [[0, 0, -56, -4, -1, 0, 0],
                               [0, 0, -2, 0, 0, 0, 0],
                               [-111, -4, 0, -25, 0, 0, 0],
-                              [0, 0, -21, 0, 0, 0, 0],
+                              [-10, 0, -21, 0, -9, 0, 0],
                               [0, 0, 0, -1, 0, 0, 0],
                               [0, 0, 0, -2, 0, 0, 0],
                               [0, 0, 0, 0, 0, 0, 0]]
@@ -619,7 +634,7 @@ def create_toga_result_plot(results_dataframe):
     ax_total = plot_dataframe.plot.bar(stacked=True, color=custom_colours, rot=0, figsize=(8, 5))
     ax_total.set_ylim(-150, 0)
     ax_total.legend(loc='lower right')
-    ax_total.set_ylabel("amount of genes")
+    ax_total.set_ylabel("negative shift")
     ax_total.set_title("Gene status negative shift")
 
     figure_total = ax_total.get_figure()
@@ -640,7 +655,7 @@ def create_toga_result_plot(results_dataframe):
 
     ax_total = plot_dataframe.plot.bar(stacked=True, color=custom_colours, rot=0, figsize=(8, 5), legend=False)
     ax_total.set_ylim(0, 150)
-    ax_total.set_ylabel("amount of genes")
+    ax_total.set_ylabel("positive shift")
     ax_total.set_title("Gene status flow")
 
     figure_total = ax_total.get_figure()
