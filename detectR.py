@@ -18,6 +18,8 @@ def detect_regions(cov_file_path, cov_start, cov_end):
     :return: list with the low coverage regions
     """
 
+    print("Detect low coverage regions in the given Pbc file")
+
     import_file = open(cov_file_path)  # Opens the coverage file
     current_position = 0  # Saves the current position
     low_cov = False  # Saves the current coverage situation
@@ -28,13 +30,17 @@ def detect_regions(cov_file_path, cov_start, cov_end):
     start_scaffold = str    # Parameter is for excluding low cov. regions that are spanning multiple scaffolds
     current_scaffold = ["scaffoldname", [(0, 10)]]    # Saves the name of the scaffold and all low cov. regions in them.
 
+    # Print initialising line
+    print("#####")
+
     # Detects the low coverage regions and saves them in low_coverage_regions list
     for line in import_file:
         splitted_line = line.split()
 
         # New scaffold starts, old scaffold information is appended to the final output list
         if splitted_line[0] != current_scaffold[0]:
-            print("New scaffold: ", splitted_line[0])
+            print("\033[A                             \033[A")
+            print("Current scaffold: ", splitted_line[0])
 
             # Appends the old scaffold to the final output list if low cov. reg. are found in the finished scaffold
             if current_scaffold[1]:
@@ -65,6 +71,84 @@ def detect_regions(cov_file_path, cov_start, cov_end):
         low_cov_regions.append(current_scaffold)
 
     low_cov_regions.pop(0)      # Removes the initialising object
+
+    return low_cov_regions
+
+
+def create_low_cov_tsv_file(low_cov_regions, output_file_path):
+    """
+    This function creates a output tsv file with all originally detected low coverage functions before the merging of
+    close  together low cov. regions, and the step where short low cov. regions are expanded.
+    This is done for a later comparison of the by Diamond detected frameshifts to the original low cov. regions, thus
+    only frameshift positions in low cov. regions are considered in the healing process.
+    The low cov regions are stored in the format: scaffold \t start-position-in-scaffold \t end-pos-in-scaff + \n.
+    :param low_cov_regions: output of the detect_regions() function
+    :param output_file_path: path where the low cov. regions storage file should be saved (including the file name!)
+    :return: only the output file
+    """
+
+    # Create new low cov storage file
+    low_cov_storage_file = open(output_file_path, "w")
+
+    # Store the low cov data in the file
+    for scaffold in low_cov_regions:
+
+        current_scaffold_name = scaffold[0]
+
+        # Save all low cov. reg. in separate lines
+        for low_cov_region in scaffold[1]:
+            low_cov_storage_file.write(current_scaffold_name + "\t" + str(low_cov_region[0]) + "\t" +
+                                       str(low_cov_region[1]) + "\n")
+
+    low_cov_storage_file.close()
+
+    return None
+
+
+def read_in_low_cov_tsv_file(storage_tsv_file_path):
+    """
+    This functions simply reads in the .tsv file, which was created by the create_low_cov_tsv_file() function.
+    The tsv stores all original low cov. regions of an current run.
+    The function returns the low_cov_regions list that was used to create the .tsv file. (same as the output of the
+    detect_regions function).
+    For more information see the .tsv creation function.
+    :param storage_tsv_file_path: path to the .tsv file (including the file name!)
+    :return: low_cov_regions
+    """
+
+    low_cov_regions = []
+    current_scaff_name = "initialising_scaffold"
+    current_scaff_low_cov_reg_list = []
+
+    # Open low cov storage file
+    low_cov_storage_file = open(storage_tsv_file_path, "r")
+
+    for line in low_cov_storage_file:
+        line_split = line.strip().split()
+        scaff_name = line_split[0]
+        low_cov_start_pos = int(line_split[1])
+        low_cov_end_pos = int(line_split[2])
+
+        # Case for a new scaffold
+        if scaff_name != current_scaff_name:
+
+            # Append previous scaffold to the list
+            low_cov_regions.append([current_scaff_name, current_scaff_low_cov_reg_list])
+
+            # Initialise new scaffold lists
+            current_scaff_name = scaff_name
+            current_scaff_low_cov_reg_list = [(low_cov_start_pos, low_cov_end_pos)]
+
+        # Case for low cov region in the same scaffold as before
+        else:
+            # Append low cov region to the list
+            current_scaff_low_cov_reg_list.append((low_cov_start_pos, low_cov_end_pos))
+
+    # Append the last remaining scaffold
+    low_cov_regions.append([current_scaff_name, current_scaff_low_cov_reg_list])
+
+    # Remove initialising scaffold of the list
+    low_cov_regions.pop(0)
 
     return low_cov_regions
 

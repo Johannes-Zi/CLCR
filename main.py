@@ -14,7 +14,7 @@ import outputC
 def main():
     print("MAIN CALLED")
 
-    """# Short read low cov. region detection:
+    # Short read low cov. region detection:
     short_read_coverage_file = "/share/gluster/NOTLOESUNG/freya/T_draco/t_draco.pbc.wgs_short.txt"
     short_low_cov_regions = detectR.detect_regions(short_read_coverage_file, 15, 18)
     region_count = 0
@@ -22,7 +22,14 @@ def main():
         region_count += len(scaffold[1])
     print("Total short read low cov. regions before merging: ", region_count)
 
-    # Create length distribution plot of the
+    low_cov_storage_tsv = "/home/johannes/Desktop/trachinus_draco/storage_files/original_low_cov_regions.tsv"
+    detectR.create_low_cov_tsv_file(short_low_cov_regions, low_cov_storage_tsv)
+
+    stored_short_low_cov_regions = detectR.read_in_low_cov_tsv_file(low_cov_storage_tsv)
+
+    print(short_low_cov_regions == stored_short_low_cov_regions)
+
+    """# Create length distribution plot of the
     # len_distribution = low_cov_length_distribution_plot(short_low_cov_regions,
     #                                                    "/home/johannes/Desktop/low_cov_len_distribution_raw.png")
 
@@ -66,12 +73,12 @@ def main():
 
     considered_diamond_hits_list, healing_region_list = outputP.filter_out_relevant_results(all_diamond_results, 10)
 
-    output_path = "/home/johannes/Desktop/considered_hits_len_distribution.png"
-    merged_len_dist = [[5, 71975], [25, 29666], [50, 24082], [100, 32263], [250, 35836], [500, 31516], [1000, 17666],
-                       [5000, 9168], [float("inf"), 695]]
-    length_distribution = outputP.considered_diamond_hit_length_distribution_plot(considered_diamond_hits_list,
-                                                                                  output_path, merged_len_dist)
-    print(length_distribution)
+    #output_path = "/home/johannes/Desktop/considered_hits_len_distribution.png"
+    #merged_len_dist = [[5, 71975], [25, 29666], [50, 24082], [100, 32263], [250, 35836], [500, 31516], [1000, 17666],
+    #                    [5000, 9168], [float("inf"), 695]]
+    #length_distribution = outputP.considered_diamond_hit_length_distribution_plot(considered_diamond_hits_list,
+    #                                                                              output_path, merged_len_dist)
+    #print(length_distribution)
 
     print(len(healing_region_list), " queries with at least one frameshift found")
     print(len(all_diamond_results), " queries had at least one Diamond hit")
@@ -88,7 +95,7 @@ def main():
     
     #"""
 
-    # Evaluate the TOGA results
+    """# Evaluate the TOGA results
 
     HLtraDra1_file_path = "/home/johannes/Desktop/trachinus_draco/TOGA_run_1_output/loss_summ_data_HLtraDra1.tsv"
     HLtraDra3_file_path = "/home/johannes/Desktop/trachinus_draco/TOGA_run_1_output/loss_summ_data_HLtraDra3.tsv"
@@ -96,6 +103,8 @@ def main():
     results_dataframe = outputP.read_in_toga_lossgene_file(HLtraDra1_file_path, HLtraDra3_file_path)
 
     outputP.create_toga_result_plot(results_dataframe)
+
+    # """
 
 
 if __name__ == '__main__':
