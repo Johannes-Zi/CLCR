@@ -14,7 +14,7 @@ import outputC
 def main():
     print("MAIN CALLED")
 
-    # Short read low cov. region detection:
+    """# Short read low cov. region detection:
     short_read_coverage_file = "/share/gluster/NOTLOESUNG/freya/T_draco/t_draco.pbc.wgs_short.txt"
     short_low_cov_regions = detectR.detect_regions(short_read_coverage_file, 15, 18)
     region_count = 0
@@ -25,11 +25,7 @@ def main():
     low_cov_storage_tsv = "/home/johannes/Desktop/trachinus_draco/storage_files/original_low_cov_regions.tsv"
     detectR.create_low_cov_tsv_file(short_low_cov_regions, low_cov_storage_tsv)
 
-    stored_short_low_cov_regions = detectR.read_in_low_cov_tsv_file(low_cov_storage_tsv)
-
-    print(short_low_cov_regions == stored_short_low_cov_regions)
-
-    """# Create length distribution plot of the
+    # Create length distribution plot of the
     # len_distribution = low_cov_length_distribution_plot(short_low_cov_regions,
     #                                                    "/home/johannes/Desktop/low_cov_len_distribution_raw.png")
 
@@ -65,13 +61,17 @@ def main():
     # sbatch --array=1-51 CLCR_slurmarray.slurm
     # """
 
-    """# Read in the diamond results
+    # Read in the diamond results
 
     output_dir = "/home/johannes/Desktop/trachinus_draco/short_read_queries_output/"
 
     all_diamond_results = outputP.read_in_diamond_output(output_dir)
 
-    considered_diamond_hits_list, healing_region_list = outputP.filter_out_relevant_results(all_diamond_results, 10)
+    low_cov_storage_tsv = "/home/johannes/Desktop/trachinus_draco/storage_files/original_low_cov_regions.tsv"
+    stored_short_low_cov_regions = detectR.read_in_low_cov_tsv_file(low_cov_storage_tsv)
+
+    considered_diamond_hits_list, healing_region_list = outputP.filter_out_relevant_results(all_diamond_results, 10,
+                                                                                           stored_short_low_cov_regions)
 
     #output_path = "/home/johannes/Desktop/considered_hits_len_distribution.png"
     #merged_len_dist = [[5, 71975], [25, 29666], [50, 24082], [100, 32263], [250, 35836], [500, 31516], [1000, 17666],
@@ -83,7 +83,7 @@ def main():
     print(len(healing_region_list), " queries with at least one frameshift found")
     print(len(all_diamond_results), " queries had at least one Diamond hit")
 
-    old_assembly = "/share/gluster/assemblies/Tdraco/" \
+    """old_assembly = "/share/gluster/assemblies/Tdraco/" \
                    "t_draco_pacbio_salsa.FINAL_gap_closed.scaff_seqs_FINAL_pilon_2.fasta"
 
     new_assembly_dir = "/home/johannes/Desktop/trachinus_draco/healed_assembly/"

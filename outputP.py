@@ -346,14 +346,62 @@ def read_in_diamond_output(output_dir):
     return all_diamond_results
 
 
-def filter_out_relevant_results(all_diamond_results, max_detect_dist):
+def check_if_frameshift_is_low_cov(max_detect_dist, low_cov_regions, current_scaffold, framesh_pos_in_scaff):
+    """
+    This functions checks for each frameshift, that was considered by the overlapping heuristic, if the frameshift
+    positions really lays in an original detected low coverage region. Which means before merging low coverage regions
+    that are close together and the step where low cov regions were expanded to work as queries for Diamond.
+    Because only detected frameshifts in low coverage regions are more likely a result of an assembly error. Detected
+    frameshifts in normal coverage regions are more likely the result of the detection of a normal inactivating
+    mutation.
+    To prevent a hard cutoff between regions where frameshifts are considered and regions where frameshift are excluded,
+    the max_detect_dist is introduced, which means when this variable is for example 10... Framshifts that are 10 Bp
+    next to a low cov region, are still considered in the healing process.
+
+    :param max_detect_dist:
+    :param low_cov_regions:
+    :param current_scaffold:
+    :param framesh_pos_in_scaff:
+    :return:
+    """
+
+    # Turns True if the detected frameshifts is in a original low cov region
+    low_cov_frameshift = False
+
+    # First search matching scaffold
+    for scaffold_data in low_cov_regions:
+
+        # Case that matching scaffold was found
+        if scaffold_data[0] == current_scaffold:
+
+            for low_cov_region in scaffold_data[1]:
+
+                considered_start_pos = low_cov_region[0] - max_detect_dist
+                considered_end_pos = low_cov_region[1] + max_detect_dist
+
+                # Case for finding a low cov region that overlaps the current frameshift position
+                if (considered_start_pos <= framesh_pos_in_scaff) and (considered_end_pos >= framesh_pos_in_scaff):
+                    low_cov_frameshift = True
+                    break
+
+                # Case where all possible low cov regions are passed, and no overlapping could be found
+                elif considered_start_pos > framesh_pos_in_scaff:
+                    break
+
+            break
+
+    return low_cov_frameshift
+
+
+def filter_out_relevant_results(all_diamond_results, max_detect_dist, low_cov_regions):
     """
     This functions works as an additional filtering part, where all irrelevant and not project fitting Diamond results
     are filtered out. This means implementing an overlapping heuristic (for more detailed information about this view
     the project wiki), and a filtering step where frameshifts are filtered out when they are not in the low coverage
     region of the query or right next to it. This could happen when a low cov. region is to short and was expanded to
     the minimum base-pair length to work as a query. In this case frameshifts could also be detected at positions of the
-    expanded part of the query and not in the original low cov. part. Those frameshifts contradict to the program
+    expanded part of the query and not in the original low cov. part. Or when low cov regions were merged together in
+    the merge step, and region between them is also part of the query. Those frameshifts contradict to the program
     approach of healing frameshifts at low cov. regions that correlate with bad polishing. To implement a "soft" cutoff
     between considered and "thrown away" frameshift information, frameshifts that are still close to the original low
     cov. region are also considered. "Close" is defined by the max_detect_dist parameter, so eg. max_detect_dist = 10
@@ -374,6 +422,7 @@ def filter_out_relevant_results(all_diamond_results, max_detect_dist):
     :param max_detect_dist: The max_detect_distance defines the distance from
                             a detected frameshift position to the original low cov. region, where a frameshift is still
                             considered and not excluded in the further analysis. Values around 10 might be reasonable.
+    :param low_cov_regions: output of the read_in_low_cov_tsv_file() function, to heal only in low cov. regions
     :return: considered_diamond_hits_list, healing_region_list
     """
 
@@ -435,14 +484,14 @@ def filter_out_relevant_results(all_diamond_results, max_detect_dist):
                     # query start position and frameshift position
                     frameshift_pos_in_scaff = int(query_data[3]) + single_frameshift[0]
 
+                    # Checks if in general a frameshift is considered by the overlapping heuristic
                     frameshifts_detected += 1
 
-                    # Checks the overlapping with the low cov. region
-                    # (Exlude frameshifts that are not in the low cov. region, or close to them)
-                    if ((frameshift_pos_in_scaff >= (int(query_data[1]) - max_detect_dist)) and
-                       (frameshift_pos_in_scaff <= (int(query_data[2]) + max_detect_dist))):
+                    current_scaffold = query_data[0]
 
-                        # Appends the checked Frameshift to the
+                    if check_if_frameshift_is_low_cov(max_detect_dist, low_cov_regions, current_scaffold,
+                                                      frameshift_pos_in_scaff):
+                        # Appends the checked Frameshift to the considered list
                         current_diamond_hit_considered_frameshifts.append((single_frameshift))
                         considered_frameshifts_count += 1
 
@@ -467,8 +516,9 @@ def filter_out_relevant_results(all_diamond_results, max_detect_dist):
             healing_region_list.append([query_data[0], query_data[3], query_data[4], filtered_query_frameshift_list])
 
     print(considered_frameshifts_count, " Frameshifts are considered in the healing process")
-    print(frameshifts_detected, " Frameshifts are considered by the overlapping heuristic, regardless if they are in "
-                                "the original low cov or nor, putative intron transition frameshift excluded")
+
+    # regardless if they are in the original low cov or nor, putative intron transition frameshift excluded
+    print(frameshifts_detected, " Frameshifts are considered by the overlapping heuristic")
 
     # Calculate the ratio between healed insertions and deletions
     deletion_count = 0
@@ -480,8 +530,8 @@ def filter_out_relevant_results(all_diamond_results, max_detect_dist):
             else:
                 insertion_count += 1
 
-    print("Amount of considered insertions in the healing process: ", insertion_count)
-    print("Amount of considered deletions in the healing process: ", deletion_count)
+    print(insertion_count, "Amount of considered insertions in the healing process")
+    print(deletion_count, "Amount of considered deletions in the healing process")
 
     return considered_diamond_hits_list, healing_region_list
 
@@ -660,8 +710,6 @@ def create_toga_result_plot(results_dataframe):
 
     figure_total = ax_total.get_figure()
     figure_total.savefig("/home/johannes/Desktop/Toga_gain.png", dpi=400)
-
-
 
 
 def main():
