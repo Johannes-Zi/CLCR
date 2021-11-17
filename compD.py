@@ -16,6 +16,9 @@ def query_files_creation(list_with_scaffold_specific_low_cov_reg_lists, fna_file
     regions of each and a path to the matching fna file to read out the sequences of the low coverage regions.
     The saved positions of the queries/low cov. regions in each scaffold are the normal positions, not python list
     positions(-1) !!!
+    The query header consists of:
+    >the scaffold # the start position of the merged low cov region in scaffold # end pos of the merged.. # start pos of
+     the query in scaff. # end pos of the query..
     :param list_with_scaffold_specific_low_cov_reg_lists: list consisting of scaffold specific sublists with tuples
                                                           containing the start and he end of a region for database
                                                           comparison (output of detect_regions, merge_regions or
