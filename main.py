@@ -63,7 +63,7 @@ def main():
 
     # Read in the diamond results
 
-    output_dir = "/home/johannes/Desktop/trachinus_draco/short_read_queries_output/"
+    """output_dir = "/home/johannes/Desktop/trachinus_draco/short_read_queries_output/"
 
     all_diamond_results = outputP.read_in_diamond_output(output_dir)
 
@@ -83,7 +83,7 @@ def main():
     print(len(healing_region_list), " queries with at least one frameshift found")
     print(len(all_diamond_results), " queries had at least one Diamond hit")
 
-    """old_assembly = "/share/gluster/assemblies/Tdraco/" \
+    old_assembly = "/share/gluster/assemblies/Tdraco/" \
                    "t_draco_pacbio_salsa.FINAL_gap_closed.scaff_seqs_FINAL_pilon_2.fasta"
 
     new_assembly_dir = "/home/johannes/Desktop/trachinus_draco/healed_assembly/"
@@ -95,14 +95,17 @@ def main():
     
     #"""
 
-    """# Evaluate the TOGA results
+    # Evaluate the TOGA results
 
     HLtraDra1_file_path = "/home/johannes/Desktop/trachinus_draco/TOGA_run_1_output/loss_summ_data_HLtraDra1.tsv"
     HLtraDra3_file_path = "/home/johannes/Desktop/trachinus_draco/TOGA_run_1_output/loss_summ_data_HLtraDra3.tsv"
+    toga_isoforms_tsv = "/home/johannes/Desktop/trachinus_draco/TOGA_run_1_output/toga.isoforms.tsv"
+    query_annotation_gtf = "/home/johannes/Desktop/trachinus_draco/TOGA_run_1_output/query_annotation.gtf"
 
-    results_dataframe = outputP.read_in_toga_lossgene_file(HLtraDra1_file_path, HLtraDra3_file_path)
+    results_dataframe = outputP.read_in_toga_lossgene_file(HLtraDra1_file_path, HLtraDra3_file_path, toga_isoforms_tsv,
+                                                           query_annotation_gtf)
 
-    outputP.create_toga_result_plot(results_dataframe)
+    #outputP.create_toga_result_plot(results_dataframe)
 
     # """
 

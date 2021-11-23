@@ -610,33 +610,55 @@ def considered_diamond_hit_length_distribution_plot(considered_diamond_hits_list
     return length_distribution
 
 
-def read_in_toga_lossgene_file(unhealed_file_path_1, healed_file_path_2):
+def read_in_toga_lossgene_file(unhealed_file_path, healed_file_path, isoforms_file_path, query_annotation_file_path):
     """
     Small function for evaluating the TOGA loss_summ_data.tsv files
-    :param unhealed_file_path_1: path
-    :param healed_file_path_2:
+    :param unhealed_file_path: path
+    :param healed_file_path:
+    :param isoforms_file_path
+    :param query_annotation_file_path:
     :return:
     """
 
     # Read in the tsv files with different separator
-    column_names = ["type", "gene", "status"]
-    dataframe_unhealed = pd.read_csv(unhealed_file_path_1, sep='\t', header=None, names=column_names, index_col="gene")
-    dataframe_healed = pd.read_csv(healed_file_path_2, sep='\t', header=None, names=column_names, index_col="gene")
+    column_names_1 = ["type", "gene_id", "status"]
+    dataframe_unhealed = pd.read_csv(unhealed_file_path, sep='\t', header=None, names=column_names_1,
+                                     index_col="gene_id")
+    dataframe_healed = pd.read_csv(healed_file_path, sep='\t', header=None, names=column_names_1, index_col="gene_id")
 
     gene_df_unhealed = dataframe_unhealed[dataframe_unhealed['type'] == 'GENE']
-    #print(gene_df_unhealed.head())
-    #print(gene_df_unhealed["status"].value_counts())
-    #print("Length: ", len(gene_df_unhealed.index))
 
     gene_df_healed = dataframe_healed[dataframe_healed['type'] == 'GENE']
-    #print(gene_df_healed.head())
-    #print(gene_df_healed["status"].value_counts())
-    #print("Length: ", len(gene_df_healed.index))
 
     combined_df = pd.merge(gene_df_unhealed, gene_df_healed, how="inner",
-                           suffixes=("_unhealed", "_healed"), on="gene").drop(columns=["type_healed", "type_unhealed"])
+                           suffixes=("_unhealed", "_healed"), on="gene_id").drop(columns=["type_healed", "type_unhealed"])
+
+    putative_false_corrected_df = combined_df[(combined_df['status_unhealed'] == 'I') &
+                                              ((combined_df['status_healed'] == 'UL') |
+                                               (combined_df['status_healed'] == 'L') |
+                                               (combined_df['status_healed'] == 'M'))]
+
+    # Read in the tsv files with different separator
+    gene_isoforms_df = pd.read_csv(isoforms_file_path, sep='\t', index_col="gene_id")
+
+    putative_false_corrected_df_2 = pd.merge(putative_false_corrected_df, gene_isoforms_df, how="inner", on="gene_id")
+
+    column_names_2 = ["1", "2", "3", "4", "5", "6", "7", "8"]
+    query_annotation_df = pd.read_csv(query_annotation_file_path, sep='\t', header=None, names=column_names_1)
+
+    print(query_annotation_df.head())
+
+    putative_false_corrected_df_2.to_csv("/home/johannes/Desktop/trachinus_draco/TOGA_run_1_output/"
+                                         "putative_false_corrected.tsv", sep='\t')
+
+    print(putative_false_corrected_df_2)
+
 
     results_dataframe = combined_df.value_counts()
+    #print(combined_df.head())
+
+    #print(results_dataframe)
+
     return results_dataframe
 
 
