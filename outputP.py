@@ -692,6 +692,85 @@ def read_in_toga_lossgene_file(unhealed_file_path, healed_file_path, isoforms_fi
     return results_dataframe
 
 
+def check_overlapping_of_putative_wrong_corrected_with_actual_correction_positions(putative_wrong_corrected_file_path,
+                                                                                   healing_region_list):
+    """
+
+    :param putative_wrong_corrected_file_path:
+    :param healing_region_list
+    :return:
+    """
+    # Read in the file
+    input_file = open(putative_wrong_corrected_file_path, "r")
+    # Skipps the first line
+    next(input_file)
+
+    # Stores the information for the query creation (input of the query_files_creation() function)
+    diamond_query_list = []
+
+    # Read in current potential wrong corrected region
+    for line in input_file:
+        splitted_line = line.split()
+
+        current_region = splitted_line[1]
+        isoform_id = splitted_line[4]
+        current_scaffold = splitted_line[5]
+        start_pos_in_scaff = min(int(splitted_line[6]), int(splitted_line[7]))
+        end_pos_in_scaff = max(int(splitted_line[6]), int(splitted_line[7]))
+
+        overlapping_found = False
+
+        # Search if there is a overlapping correction position
+        for query in healing_region_list:
+            # Case for same scaffold
+            if current_scaffold == query[0]:
+                # Checks for each healing positions, if its overlapping with the current region
+                for healing_pos in query[3]:
+                    healing_pos_in_scaff = int(query[1]) + int(healing_pos[0])
+
+                    # Case, where healing in the putative wrong healed region was detected
+                    if (healing_pos_in_scaff >= start_pos_in_scaff) and (healing_pos_in_scaff <= end_pos_in_scaff):
+
+                        query_header = current_region + "#" + isoform_id + "#" + current_scaffold + "#" + \
+                                       str(start_pos_in_scaff) + "#" + str(end_pos_in_scaff)
+                        diamond_query_list.append([current_scaffold, [(start_pos_in_scaff, end_pos_in_scaff,
+                                                                       query_header)]])
+
+                        overlapping_found = True
+                        break
+
+            if overlapping_found:
+                break
+
+    # Contains the filtered output
+    filtered_diamond_query_list = []
+
+    # Removes duplicates, when for a single loci multiple isoforms are predicted, thus multiple queries of the same loki
+    # would be created, what makes no sense
+    loci_list = []
+    for query in diamond_query_list:
+        already_added = False
+        start_pos = query[1][0][0]
+        end_pos = query[1][0][1]
+        # Checks if the region of the current query is already represented by another query
+        for already_added_loci in loci_list:
+            if (already_added_loci[0] == start_pos) and (already_added_loci[1] == end_pos):
+                already_added = True
+                break
+
+        # Appends the query to the loci list
+        if not already_added:
+            loci_list.append([start_pos, end_pos])
+            filtered_diamond_query_list.append(query)
+
+    for x in filtered_diamond_query_list:
+        print(x)
+
+    print(len(filtered_diamond_query_list))
+
+    return filtered_diamond_query_list
+
+
 def create_toga_result_plot(results_dataframe):
     """
 
