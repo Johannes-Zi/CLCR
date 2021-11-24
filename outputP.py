@@ -630,34 +630,64 @@ def read_in_toga_lossgene_file(unhealed_file_path, healed_file_path, isoforms_fi
 
     gene_df_healed = dataframe_healed[dataframe_healed['type'] == 'GENE']
 
+    # Create an combined dataframe with the information of the healed and unhealed file
     combined_df = pd.merge(gene_df_unhealed, gene_df_healed, how="inner",
                            suffixes=("_unhealed", "_healed"), on="gene_id").drop(columns=["type_healed", "type_unhealed"])
 
+    # Search for the gene entries, where the gene was intact in the unhealed assembly and lost, uncertain lost or
+    # missing in the healed assembly
     putative_false_corrected_df = combined_df[(combined_df['status_unhealed'] == 'I') &
                                               ((combined_df['status_healed'] == 'UL') |
                                                (combined_df['status_healed'] == 'L') |
                                                (combined_df['status_healed'] == 'M'))]
 
-    # Read in the tsv files with different separator
-    gene_isoforms_df = pd.read_csv(isoforms_file_path, sep='\t', index_col="gene_id")
+    # Read in the isoforms tsv file
+    gene_isoforms_df = pd.read_csv(isoforms_file_path, sep='\t', index_col="gene_id").rename(
+        columns={"trascript_id": "transcript_id"})
 
-    putative_false_corrected_df_2 = pd.merge(putative_false_corrected_df, gene_isoforms_df, how="inner", on="gene_id")
+    # Print value count before first inner merge (original amount of putative wrong healed genes)
+    print(putative_false_corrected_df.value_counts())
+    # Saves the data for late checks
+    putative_false_corrected_df.to_csv("/home/johannes/Desktop/trachinus_draco/TOGA_run_1_output/"
+                                       "original_putative_wrong_healed.tsv", sep='\t')
 
-    column_names_2 = ["1", "2", "3", "4", "5", "6", "7", "8"]
-    query_annotation_df = pd.read_csv(query_annotation_file_path, sep='\t', header=None, names=column_names_1)
+    # Includes the informations of the isoform-identifieres for each gene
+    putative_false_corrected_df = pd.merge(putative_false_corrected_df, gene_isoforms_df, how="inner", on="gene_id")
 
-    print(query_annotation_df.head())
+    # Read in the complete annotation of the assembly
+    column_names_2 = ["scaffold", "2", "3", "start_pos", "end_pos", "6", "7", "8", "9"]
+    query_annotation_df = pd.read_csv(query_annotation_file_path, sep='\t', header=None, names=column_names_2).drop(
+        columns=["2", "6", "7", "8"])
 
-    putative_false_corrected_df_2.to_csv("/home/johannes/Desktop/trachinus_draco/TOGA_run_1_output/"
-                                         "putative_false_corrected.tsv", sep='\t')
+    # Filter out the entries that are not "transcript" in the 3.rd column
+    query_annotation_df = query_annotation_df[query_annotation_df["3"] == "transcript"].drop(columns=["3"])
+    # Extract the isoform identifier out of the last column and add those as new column
+    query_annotation_df["transcript_id"] = query_annotation_df["9"].str.split("\"").str[1]
+    # Removes the projection-location specific identifier number at the end of each isoform identifier
+    query_annotation_df["transcript_id"] = query_annotation_df["transcript_id"].map(lambda x: x.rstrip("0123456789"
+                                                                                                       ).rstrip("."))
+    query_annotation_df = query_annotation_df.drop(columns=["9"]).set_index("transcript_id")
 
-    print(putative_false_corrected_df_2)
+    # Print before second inner merge
+    print(putative_false_corrected_df)
 
+    # Inner merge to add the positions of each projection for each gene in the assembly
+    putative_false_corrected_df = pd.merge(putative_false_corrected_df.reset_index(), query_annotation_df, how="inner",
+                                           on="transcript_id")
 
+    # Print final dataframe
+    print(putative_false_corrected_df)
+
+    # Print how many of the original regions are left after merging - some could get lost if there are no entries in the
+    # query_annotation file
+    print("Genes with transcrips in the annotation file:",
+          putative_false_corrected_df.groupby("gene_id")["transcript_id"].nunique().count())
+
+    putative_false_corrected_df.to_csv("/home/johannes/Desktop/trachinus_draco/TOGA_run_1_output/"
+                                       "putative_false_corrected.tsv", sep='\t')
+
+    # Result dataframe with overall results
     results_dataframe = combined_df.value_counts()
-    #print(combined_df.head())
-
-    #print(results_dataframe)
 
     return results_dataframe
 
