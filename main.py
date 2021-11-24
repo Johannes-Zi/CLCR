@@ -86,6 +86,15 @@ def main():
     diamond_query_list = outputP.check_overlapping_of_putative_wrong_corrected_with_actual_correction_positions(
         "/home/johannes/Desktop/trachinus_draco/TOGA_run_1_output/putative_false_corrected.tsv", healing_region_list)
 
+    # Assembly file
+    assembly_file = "/share/gluster/assemblies/Tdraco/" \
+                    "t_draco_pacbio_salsa.FINAL_gap_closed.scaff_seqs_FINAL_pilon_2.fasta"
+
+    # Create queries who might introduce putative wrong healing:
+    wrong_healing_query_dir = "/home/johannes/Desktop/trachinus_draco/putative_wrong_healed_queries/"
+    compD.custom_query_files_creation(diamond_query_list, assembly_file, 0, wrong_healing_query_dir, 1)
+
+    # sbatch --array=1-53 CLCR_slurmarray.slurm
 
 
     """old_assembly = "/share/gluster/assemblies/Tdraco/" \

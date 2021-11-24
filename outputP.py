@@ -731,9 +731,13 @@ def check_overlapping_of_putative_wrong_corrected_with_actual_correction_positio
                     # Case, where healing in the putative wrong healed region was detected
                     if (healing_pos_in_scaff >= start_pos_in_scaff) and (healing_pos_in_scaff <= end_pos_in_scaff):
 
+                        query_start = max(healing_pos_in_scaff - 400, 0)
+                        query_end = healing_pos_in_scaff + 400
+
                         query_header = current_region + "#" + isoform_id + "#" + current_scaffold + "#" + \
-                                       str(start_pos_in_scaff) + "#" + str(end_pos_in_scaff)
-                        diamond_query_list.append([current_scaffold, [(start_pos_in_scaff, end_pos_in_scaff,
+                                       str(start_pos_in_scaff) + "#" + str(end_pos_in_scaff) + "#" + \
+                                       str(query_start) + "#" + str(query_end)
+                        diamond_query_list.append([current_scaffold, [(query_start, query_end,
                                                                        query_header)]])
 
                         overlapping_found = True
