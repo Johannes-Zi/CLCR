@@ -111,7 +111,7 @@ def heal_assembly_file(healing_region_list, input_fna_path, outut_dir):
                 break
 
     # Create the new assembly .fna file path, located in the same dir as the original assembly file
-    new_fna_file_path = outut_dir + "new_fna_file.fna"
+    new_fna_file_path = outut_dir + "healed_assembly.fna"
 
     print("create new assembly file")
 
