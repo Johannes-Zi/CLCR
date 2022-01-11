@@ -853,6 +853,40 @@ def transform_txt_to_gff(txt_file_path):
     return None
 
 
+def create_detailed_healing_information_file(considered_diamond_hits_list, output_file_path):
+    """
+    This function simply saves the data which is stored in the considered_diamond_hits_list in a .tsv file.
+    This means storing the relevant information for each healed position in the assembly.
+    Each line represents one corrected frameshift, the columns are structured like this:
+    Scaffold, frameshift pos. in scaff., deletion = D/insertion = I, underlying query start pos. in scaff.,
+    query end pos. in scaff., underlying low coverage region start pos. in scaff, low cov. end pos. in scaff.,
+    protein hit, e-value, bit-score, similarity-percentage
+
+    With this information, the underlying diamond hit for each healing positions could be clearly identified in the
+    diamond output data, for further analysis
+    :param considered_diamond_hits_list: Output of the filter_out_relevant_results function
+    :param output_file_path: path of the output .tsv file, containing the file name
+    :return:
+    """
+
+    # Create new output file
+    output_tsv_file = open(output_file_path, "w")
+
+    # Iterate through the query information and save the information in teh new file
+    for query_data in considered_diamond_hits_list:
+
+        for healing_pos in query_data[9]:
+
+            # More detailed info about the format in the docstring
+            output_tsv_file.write("\t".join([query_data[0], str(int(healing_pos[0]) + int(query_data[3])),
+                                             healing_pos[1], query_data[3], query_data[4], query_data[1], query_data[2],
+                                             query_data[5], query_data[6], query_data[7], query_data[8]]))
+
+    output_tsv_file.close()
+
+    return None
+
+
 def main():
     print("Output Creation main executed")
 
