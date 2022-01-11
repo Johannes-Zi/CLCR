@@ -418,6 +418,12 @@ def filter_out_relevant_results(all_diamond_results, max_detect_dist, low_cov_re
     ,like described before, so there could be Diamond hits where only a part of the detected frameshifts are considered.
     The frameshifts are saved as eg. (20, I) or (12, D), which stands for an insertion 20 base-pairs downstream of the
     query start position, or a deletion 12 base-pair downstream.
+
+    The output file considered_diamond_hits_list contains all relevatn information of each in the healing considered
+    query in the format like this:
+    [[scaffold, low cov. start pos in scaffold, low cov. end pos. ,query start pos., query end pos.,
+                # protein_hit, e_value, bit_score, similarity_percentage, [COMPLETEframeshift_list]], ...]
+
     :param all_diamond_results: Output of the read_in_diamond_output_function
     :param max_detect_dist: The max_detect_distance defines the distance from
                             a detected frameshift position to the original low cov. region, where a frameshift is still
