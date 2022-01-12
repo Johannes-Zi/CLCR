@@ -878,9 +878,9 @@ def create_detailed_healing_information_file(considered_diamond_hits_list, outpu
         for healing_pos in query_data[9]:
 
             # More detailed info about the format in the docstring
-            output_tsv_file.write("\t".join([query_data[0], str(int(healing_pos[0]) + int(query_data[3])),
+            output_tsv_file.write(("\t".join([query_data[0], str(int(healing_pos[0]) + int(query_data[3])),
                                              healing_pos[1], query_data[3], query_data[4], query_data[1], query_data[2],
-                                             query_data[5], query_data[6], query_data[7], query_data[8]]))
+                                             query_data[5], query_data[6], query_data[7], query_data[8]]) + "\n"))
 
     output_tsv_file.close()
 
