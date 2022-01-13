@@ -616,14 +616,19 @@ def considered_diamond_hit_length_distribution_plot(considered_diamond_hits_list
     return length_distribution
 
 
-def read_in_toga_lossgene_file(unhealed_file_path, healed_file_path, isoforms_file_path, query_annotation_file_path):
+def read_in_toga_lossgene_file(unhealed_file_path, healed_file_path, isoforms_file_path, query_annotation_file_path,
+                               putative_false_corrected_tsv_path):
     """
-    Small function for evaluating the TOGA loss_summ_data.tsv files
-    :param unhealed_file_path: path
-    :param healed_file_path:
-    :param isoforms_file_path
-    :param query_annotation_file_path:
-    :return:
+    Small function for evaluating the TOGA loss_summ_data.tsv files. It filters out the genes that are marked in the
+    Toga run with the unmodified/unhealed as intact and in the healed assembly as lost or missing.
+    For each of those genes all isoforms and all location of each isoform is detected and stored with the relating
+    position data in the saved output file.
+    :param unhealed_file_path: Toga loss_summ_data.tsv file path of unhealed assembly
+    :param healed_file_path: Toga loss_summ_data.tsv file path of healed assembly
+    :param isoforms_file_path: Toga output file
+    :param query_annotation_file_path: Toga annotation file path
+    :param putative_false_corrected_tsv_path: path to the output file that will be created
+    :return: results_dataframe
     """
 
     # Read in the tsv files with different separator
@@ -653,9 +658,11 @@ def read_in_toga_lossgene_file(unhealed_file_path, healed_file_path, isoforms_fi
 
     # Print value count before first inner merge (original amount of putative wrong healed genes)
     print(putative_false_corrected_df.value_counts())
-    # Saves the data for late checks
+
+    # Not necessary, just for checks
+    """# Saves the data for later checks
     putative_false_corrected_df.to_csv("/home/johannes/Desktop/trachinus_draco/TOGA_run_1_output/"
-                                       "original_putative_wrong_healed.tsv", sep='\t')
+                                       "original_putative_wrong_healed.tsv", sep='\t')"""
 
     # Includes the informations of the isoform-identifieres for each gene
     putative_false_corrected_df = pd.merge(putative_false_corrected_df, gene_isoforms_df, how="inner", on="gene_id")
@@ -689,8 +696,7 @@ def read_in_toga_lossgene_file(unhealed_file_path, healed_file_path, isoforms_fi
     print("Genes with transcrips in the annotation file:",
           putative_false_corrected_df.groupby("gene_id")["transcript_id"].nunique().count())
 
-    putative_false_corrected_df.to_csv("/home/johannes/Desktop/trachinus_draco/TOGA_run_1_output/"
-                                       "putative_false_corrected.tsv", sep='\t')
+    putative_false_corrected_df.to_csv(putative_false_corrected_tsv_path, sep='\t')
 
     # Result dataframe with overall results
     results_dataframe = combined_df.value_counts()
@@ -698,13 +704,22 @@ def read_in_toga_lossgene_file(unhealed_file_path, healed_file_path, isoforms_fi
     return results_dataframe
 
 
-def check_overlapping_of_putative_wrong_corrected_with_actual_correction_positions(putative_wrong_corrected_file_path,
-                                                                                   healing_region_list):
+def check_overlapping_healing_positions_1(putative_wrong_corrected_file_path,
+                                          healing_region_list):
     """
 
-    :param putative_wrong_corrected_file_path:
-    :param healing_region_list
-    :return:
+    Note! The best hit of the created queries in the database is not in all cases the hit on which the healing decision
+    was based, thus the new version 2 of this function was created (searching for the exact hit)
+
+    This function checks each gene that is marked by TOGA in the unhealed assembly as intact and in healed version
+    as lost/missing. This means for all locations of all isoforms of all genes is checked, if they are overlapping with
+    a healing position, thus false healing might have happened in this region. For each of those detected overlapping,
+    a query is created +- 400 Bp around the healing position. Healing positions that are represented multiple times by
+    different queries, are filtered out. The start and end position of each query is afterwards appended to the
+    filtered_diamond_query_list, which is afterwards returned for the query file creation.
+    :param putative_wrong_corrected_file_path: path to the processed toga output of read_in_toga_lossgene_file()
+    :param healing_region_list: output of filter_out_relevant_results()
+    :return: filtered_diamond_query_list
     """
     # Read in the file
     input_file = open(putative_wrong_corrected_file_path, "r")
@@ -781,9 +796,119 @@ def check_overlapping_of_putative_wrong_corrected_with_actual_correction_positio
     return filtered_diamond_query_list
 
 
-def create_toga_result_plot(results_dataframe):
+def check_overlapping_healing_positions_2(putative_wrong_corrected_file_path,
+                                          healing_data_tsv_path, output_tsv_path):
+    """
+    Improved version, that uses the healing_data.tsv file in which for each healing position the underlying Diamond hit
+    is saved.
+
+    This function checks each gene that is marked by TOGA in the unhealed assembly as intact and in healed version
+    as lost/missing. This means for all locations of all isoforms of all genes is checked, if they are overlapping with
+    a healing position in the .tsv, thus false healing might have happened in this region.
+
+    For each of those detected overlapping, a instance is saved in the output file, double representation of healing
+    positions is prevented. The output .tsv could then be used to find the healing related Diamond hits in the output
+    file.
+
+    :param putative_wrong_corrected_file_path: path to the processed toga output of read_in_toga_lossgene_file()
+    :param healing_data_tsv_path: output of create_detailed_healing_information_file()
+    :param output_tsv_path: path to the output file, including the file name
+    :return: None
     """
 
+    # Read in the healing_data.tsv file
+    healing_tsv = open(healing_data_tsv_path, "r")
+    healing_postion_data = []    # Stores the data
+    # Read in the lines
+    for line in healing_tsv:
+        healing_postion_data.append(line.strip().split())
+    healing_tsv.close()
+
+    # Read in the file with the putative wrong corrected positions
+    input_file = open(putative_wrong_corrected_file_path, "r")
+    # Skipps the first line
+    next(input_file)
+
+    # Stores the data for the ourput
+    output_tsv_data = []
+
+    # Read in current potential wrong corrected region
+    for isoform_location_data in input_file:
+        split_line = isoform_location_data.split()
+
+        current_region = split_line[1]
+        isoform_id = split_line[4]
+        current_scaffold = split_line[5]
+        start_pos_in_scaff = min(int(split_line[6]), int(split_line[7]))
+        end_pos_in_scaff = max(int(split_line[6]), int(split_line[7]))
+
+        # Search if there is a overlapping correction position
+        for healing_postion in healing_postion_data:
+            # Case for same scaffold
+            if current_scaffold == healing_postion[0]:
+
+                healing_pos_in_scaff = int(healing_postion[1])
+
+                # Case, where healing in the putative wrong healed region was detected
+                if (healing_pos_in_scaff >= start_pos_in_scaff) and (healing_pos_in_scaff <= end_pos_in_scaff):
+
+                    # Check if the found Diamond hit is already represented
+                    protein_hit_already_considered = False
+
+                    for entry in output_tsv_data:
+                        print(healing_postion[7])
+                        print(entry[12])
+                        exit()
+                        if healing_postion[7] == entry[12]:
+                            protein_hit_already_considered = True
+                            break
+
+                    if not protein_hit_already_considered:
+                        output_tsv_data.append(split_line[1:5] + healing_postion)
+
+                    # Breaks, thus no more entries with different healing positions in the same query are saved
+                    break
+
+    input_file.close()
+
+    # Create the output_file
+    output_tsv_file = open(output_tsv_path, "w")
+
+    for data_point in output_tsv_data:
+        output_tsv_file.write("\t".join(data_point + ["\n"]))
+
+    output_tsv_file.close()
+
+    return None
+
+
+def search_relating_diamond_alignments(tsv_file_path, diamond_output_dir,  output_file_path):
+    """
+    This function searches for given entries in the tsv file the matching Diamond alignments, and save the together in
+    the output file for easier checking.
+    :param tsv_file_path: path to a output file of check_overlapping_healing_positions_2
+    :param diamond_output_dir: path to the dir with the diamond output files
+    :param output_file_path: path to the output file, including the file name
+    :return: None
+    """
+
+    # Read in the .tsv file
+    tsv_file = open(tsv_file_path, "r")
+    tsv_data = []  # Stores the data
+    # Read in the lines
+    for line in tsv_file:
+        tsv_data.append(line.strip().split())
+    tsv_file.close()
+
+    # Searches for the corresponding Diamond hit/alignment
+    temp_line_storage = []
+
+    return None
+
+
+def create_toga_result_plot(results_dataframe):
+    """
+    Simply creates diagram, that displays the "gene-status flow" between the original and the healed assembly TOGA run
     :return:
     """
 
@@ -851,6 +976,8 @@ def create_toga_result_plot(results_dataframe):
 
     figure_total = ax_total.get_figure()
     figure_total.savefig("/home/johannes/Desktop/Toga_gain.png", dpi=400)
+
+    return None
 
 
 def main():
