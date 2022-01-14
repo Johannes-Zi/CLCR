@@ -65,7 +65,7 @@ def main():
 
     # Read in the diamond results
 
-    output_dir = "/home/johannes/Desktop/trachinus_draco/healing_runs/TRAdr_healing_run_10.01.2022/output_files/"
+    """output_dir = "/home/johannes/Desktop/trachinus_draco/healing_runs/TRAdr_healing_run_10.01.2022/output_files/"
 
     all_diamond_results = outputP.read_in_diamond_output(output_dir)
 
@@ -89,7 +89,7 @@ def main():
     print(len(healing_region_list), " queries with at least one frameshift found")
     print(len(all_diamond_results), " queries had at least one Diamond hit")
 
-    #diamond_query_list = outputP.check_overlapping_of_putative_wrong_corrected_with_actual_correction_positions(
+    #diamond_query_list = outputP.check_overlapping_healing_positions_1(
     #    "/home/johannes/Desktop/trachinus_draco/TOGA_run_1_output/putative_false_corrected.tsv", healing_region_list)
 
     # Assembly file
@@ -126,6 +126,22 @@ def main():
                                                            query_annotation_gtf)
 
     #outputP.create_toga_result_plot(results_dataframe)
+
+    # """
+
+    # Evaluate the TOGA results 2
+
+    putative_wrong_corrected_file_path = "/home/johannes/Desktop/trachinus_draco/toga_run_by_Michael_Hiller/putative_false_corrected.tsv"
+    healing_data_tsv_path = "/home/johannes/Desktop/trachinus_draco/healing_runs/TRAdr_healing_run_10.01.2022/storage_files/healing_data.tsv"
+    output_tsv_path =  "/home/johannes/Desktop/trachinus_draco/healing_runs/TRAdr_healing_run_10.01.2022/storage_files/toga_result_analysis.tsv"
+
+    outputP.check_overlapping_healing_positions_2(putative_wrong_corrected_file_path, healing_data_tsv_path,
+                                                  output_tsv_path)
+
+    diamond_output_dir = "/home/johannes/Desktop/trachinus_draco/healing_runs/TRAdr_healing_run_10.01.2022/output_files/"
+    output_file_path = "/home/johannes/Desktop/trachinus_draco/healing_runs/TRAdr_healing_run_10.01.2022/storage_files/toga_result_analysis_alignments.txt"
+    outputP.search_relating_diamond_alignments(output_tsv_path, diamond_output_dir, output_file_path)
+
 
     # """
 
