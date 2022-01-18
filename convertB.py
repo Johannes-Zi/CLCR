@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 """Function for extracting the coverage data out of the bam files by using samtools"""
 __author__ = "6947325: Johannes Zieres"
 __credits__ = ""
