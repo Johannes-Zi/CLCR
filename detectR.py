@@ -1,5 +1,4 @@
-#!/usr/bin/python3
-
+#!python3
 """This file contains the functions for the detection of low coverage regions in the pbc file of an assembly"""
 __author__ = "6947325: Johannes Zieres"
 __credits__ = ""

@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!python3
 
 """This file contains the functions for the creation of the output files"""
 __author__ = "6947325: Johannes Zieres"
