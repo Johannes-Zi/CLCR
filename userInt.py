@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!python3
 
 """This file contains the functions of the user interface"""
 __author__ = "6947325: Johannes Zieres"

@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!python3
 
 """Second Benchmark for the CLCR program (correct frameshift healing)"""
 __author__ = "6947325: Johannes Zieres"

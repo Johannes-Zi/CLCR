@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!python3
 
 """First benchmark for the CLCR program (determine average cutoff distance)"""
 __author__ = "6947325: Johannes Zieres"
