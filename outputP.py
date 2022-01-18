@@ -1,3 +1,4 @@
+#!python3
 """This file contains the functions for Diamond output processing"""
 __author__ = "6947325: Johannes Zieres"
 __credits__ = ""
@@ -883,10 +884,11 @@ def check_overlapping_healing_positions_2(putative_wrong_corrected_file_path,
 def search_relating_diamond_alignments(tsv_file_path, diamond_output_dir,  output_file_path):
     """
     This function searches for given entries in the tsv file the matching Diamond alignments, and save the together in
-    the output file for easier checking.
+    the several output files for easier checking . The first file contains all queries with their top hit, the other
+    files contain one query each, with all corresponding protein hits.
     :param tsv_file_path: path to a output file of check_overlapping_healing_positions_2
     :param diamond_output_dir: path to the dir with the diamond output files
-    :param output_file_path: path to the output file, including the file name
+    :param output_file_path: path to the output directory,
     :return: None
     """
 
@@ -905,9 +907,12 @@ def search_relating_diamond_alignments(tsv_file_path, diamond_output_dir,  outpu
     dir_path_len = len(diamond_output_dir) + 9  # +9 because temp_out_ consists of 9 chars
     output_file_list = sorted(output_file_list, key=lambda current_path: int(current_path[dir_path_len:-4]))
 
-    hit_count = 1   # Saves how many hits were found
+    hit_count = 0   # Saves how many hits were found
 
-    temp_line_storage = []  # Stores the relevant information for the output file
+    # Saves all results in form of the relevant lines in the file, contains one sublist for each Query, which then also
+    # contains sublists with the line of each protein hit of that query
+    found_results_storage = []
+
     # Iterate threw each datapoint
     for tsv_datapoint in tsv_data:
 
@@ -918,33 +923,35 @@ def search_relating_diamond_alignments(tsv_file_path, diamond_output_dir,  outpu
 
         break_value = False     # Gets True when the extracted data was found and no new file needs to be read in
 
+        # List which contains a sublist for each protein hit with the corresponding lines, first elem is query name
+        query_diamond_hits = []
+        protein_hit_lines = []      # Saves all lines of the current protein hit
+
         # Search for the corresponding Diamond hit/alignment
         for output_file in output_file_list:
             # Saves when the searched query was found, thus only the following hits are viewed
             searched_query_found = False
-            # Saves that the searched protein hit was found
-            searched_protein_hit_found = False
             current_output_file = open(output_file, "r")
 
             # Read the complete file, breaks after all hits of the searched query are considered
             for line in current_output_file:
 
                 if searched_query_found:
-                    if searched_protein_hit_found:
-                        temp_line_storage.append(line)
 
                     # Case that the searched protein hit was found
                     if line.startswith(">"):
+                        query_diamond_hits.append(protein_hit_lines)
+                        protein_hit_lines = [line]      # Reset the list
 
-                        if protein_hit == line.split()[0][1:]:
-                            searched_protein_hit_found = True
-                            temp_line_storage.append(line)      # Saves the protein info line
-
-                    if line.startswith("Query= "):
-                        temp_line_storage = temp_line_storage + ["\n", "\n"]
+                    # Case that the complete results of the current query are read in, thus the current loop is finished
+                    elif line.startswith("Query= "):
+                        found_results_storage.append(query_diamond_hits)
                         hit_count += 1
                         break_value = True
                         break
+
+                    else:
+                        protein_hit_lines.append(line)
 
                 # Case that the matching query data was found
                 if line.startswith("Query= "):
@@ -954,8 +961,7 @@ def search_relating_diamond_alignments(tsv_file_path, diamond_output_dir,  outpu
                         searched_query_found = True
 
                         # Append the query information line
-                        temp_line_storage.append(line)
-                        temp_line_storage.append("\n")
+                        protein_hit_lines = protein_hit_lines + ["\n", line]
 
             current_output_file.close()
 
@@ -963,12 +969,31 @@ def search_relating_diamond_alignments(tsv_file_path, diamond_output_dir,  outpu
                 break
 
     # Write the collected lines in the output .txt file
-    output_txt_file = open(output_file_path, "w")
+    output_txt_file = open((output_file_path + "queries_result_summary.txt"), "w")
 
-    for line in temp_line_storage:
-        output_txt_file.write(line)
+    # Creates the first output file with the corresponding first protein hit alignment of each found query
+    for query_data in found_results_storage:
+
+        # Writes down first element (Query header) and second element (first protein hit)
+        for protein_hit in range(min(2, len(query_data))):      # min() for queries without a protein hit
+
+            for line in query_data[protein_hit]:
+                output_txt_file.write(line)
 
     output_txt_file.close()
+
+    # Create the other result files, with all protein hits of one query in each file
+    name_count = 1
+    for query_data in found_results_storage:
+        output_file = open((output_file_path + "query_results_" + str(name_count)) + ".txt", "w")
+
+        for diamond_hit_data in query_data:
+
+            for line in diamond_hit_data:
+                output_file.write(line)
+
+        name_count += 1
+        output_file.close()
 
     print("Found Diamond hits: ", hit_count)
 
