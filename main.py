@@ -1,4 +1,5 @@
 # coding=utf-8
+#!python3
 
 """This file ... is the main file :) """
 __author__ = "6947325: Johannes Zieres"
@@ -139,7 +140,7 @@ def main():
                                                   output_tsv_path)
 
     diamond_output_dir = "/home/johannes/Desktop/trachinus_draco/healing_runs/TRAdr_healing_run_10.01.2022/output_files/"
-    output_file_path = "/home/johannes/Desktop/trachinus_draco/healing_runs/TRAdr_healing_run_10.01.2022/storage_files/toga_result_analysis_alignments.txt"
+    output_file_path = "/home/johannes/Desktop/trachinus_draco/healing_runs/TRAdr_healing_run_10.01.2022/storage_files/putative_wrong_corrected_diamond_hits/"
     outputP.search_relating_diamond_alignments(output_tsv_path, diamond_output_dir, output_file_path)
 
 
