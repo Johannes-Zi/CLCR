@@ -648,10 +648,17 @@ def read_in_toga_lossgene_file(unhealed_file_path, healed_file_path, isoforms_fi
 
     # Search for the gene entries, where the gene was intact in the unhealed assembly and lost, uncertain lost or
     # missing in the healed assembly
+
+    # Check putative wrongly healed genes
     putative_false_corrected_df = combined_df[(combined_df['status_unhealed'] == 'I') &
                                               ((combined_df['status_healed'] == 'UL') |
                                                (combined_df['status_healed'] == 'L') |
                                                (combined_df['status_healed'] == 'M'))]
+
+    """# Check putative correctly healed genes
+    putative_false_corrected_df = combined_df[((combined_df['status_unhealed'] == 'L') |
+                                              (combined_df['status_unhealed'] == 'UL')) &
+                                              (combined_df['status_healed'] == 'I')]"""
 
     # Read in the isoforms tsv file
     gene_isoforms_df = pd.read_csv(isoforms_file_path, sep='\t', index_col="gene_id").rename(
