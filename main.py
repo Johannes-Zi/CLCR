@@ -65,7 +65,7 @@ def main():
     # sbatch --array=1-51 CLCR_slurmarray.slurm
     # """
 
-    """# Read in the diamond results
+    # Read in the diamond results
 
     output_dir = "/home/johannes/Desktop/trachinus_draco/healing_runs/TRAdr_healing_run_10.01.2022/output_files/"
 
@@ -103,23 +103,22 @@ def main():
 
     # sbatch --array=1-53 CLCR_slurmarray.slurm
 
-
     old_assembly = "/share/gluster/assemblies/Tdraco/" \
                    "t_draco_pacbio_salsa.FINAL_gap_closed.scaff_seqs_FINAL_pilon_2.fasta"
 
-    new_assembly_dir = "/home/johannes/Desktop/trachinus_draco/healing_runs/TRAdr_healing_run_10.01.2022/" \
+    new_assembly_dir = "/home/johannes/Desktop/trachinus_draco/healing_runs/TRAdr_healing_run_27.01.2022/" \
                        "healed_assembly/"
 
     new_fna_file_path, simplified_distance_distribution = outputC.heal_assembly_file(healing_region_list, old_assembly,
                                                                                      new_assembly_dir)
 
-    print(simplified_distance_distribution)
+    #print(simplified_distance_distribution)
     
     #"""
 
     # Evaluate the TOGA results
 
-    HLtraDra1_file_path = "/home/johannes/Desktop/trachinus_draco/toga_run_by_Michael_Hiller/" \
+    """HLtraDra1_file_path = "/home/johannes/Desktop/trachinus_draco/toga_run_by_Michael_Hiller/" \
                           "loss_summ_data_HLtraDra1.tsv"
     HLtraDra3_file_path = "/home/johannes/Desktop/trachinus_draco/toga_run_by_Michael_Hiller/" \
                           "loss_summ_data_HLtraDra3.tsv"
@@ -138,8 +137,8 @@ def main():
     # search for overlapping
     healing_data_tsv_path = "/home/johannes/Desktop/trachinus_draco/healing_runs/TRAdr_healing_run_10.01.2022/" \
                             "storage_files/healing_data.tsv"
-    output_tsv_path =  "/home/johannes/Desktop/trachinus_draco/healing_runs/TRAdr_healing_run_10.01.2022/" \
-                       "storage_files/toga_result_analysis.tsv"
+    output_tsv_path = "/home/johannes/Desktop/trachinus_draco/healing_runs/TRAdr_healing_run_10.01.2022/" \
+                      "storage_files/toga_result_analysis.tsv"
 
     outputP.check_overlapping_healing_positions_2(putative_wrong_corrected_file_path, healing_data_tsv_path,
                                                   output_tsv_path)
