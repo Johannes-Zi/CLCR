@@ -70,31 +70,73 @@ def check_correct_healing(healing_data_tsv_path, healed_assembly_file_path):
 
     correct_position_count = 0      # Counts how many of the N's are correctly placed
 
-    print("Checks healing positions")
+    print("Check healing positions")
 
-    for scaffold in healing_data:
+    temp_false = 0
+
+    for scaffold_healing_positions in healing_data:
         pos_shift_count = 0     # Counts how many Bp the original positions are shifted by N insertions
 
+        current_scaffold_sequence = str     # Initialising
         # Search the relating scaffold
         for scaffold_sequence in scaffold_list:
-            if scaffold_sequence[0] == scaffold[0][0]:
+            if scaffold_sequence[0] == scaffold_healing_positions[0][0]:
                 current_scaffold_sequence = scaffold_sequence
                 break
 
+        # Sort the healing positions in each scaffold ascending
+        sorted_healing_pos = sorted(scaffold_healing_positions, key=lambda temp_healing_pos: int(temp_healing_pos[1]))
+
+        for x in range(100):
+            print(sorted_healing_pos[x])
+
+
+        print("\n")
+
         # Checks all healing positions in the current scaffold
-        for healing_pos in scaffold:
+        for healing_pos in sorted_healing_pos:
 
-            for x in range(-5, 6, 1):
-                if current_scaffold_sequence[1][(int(healing_pos[1]) + pos_shift_count) + x] == "N":
-                    correct_position_count += 1
+            if ([healing_pos[0], healing_pos[3], healing_pos[4]] == ['HiC_scaffold_1', '881155', '883251']) or \
+                    ([healing_pos[0], healing_pos[3], healing_pos[4]] == ['HiC_scaffold_1', '1218609', '1219109']):
+                interesting_position = int(healing_pos[1]) + pos_shift_count
+                print("#################")
+                print(healing_pos)
+                print("pos_shift_count", pos_shift_count)
+                # Gibt das N in der Mitte aus
+                print(current_scaffold_sequence[1][(interesting_position - 2):(interesting_position + 3)])
+                print(current_scaffold_sequence[1][(interesting_position - 20):(interesting_position + 21)])
 
-                    # Increase position count
-                    if healing_pos[2] == "D":
-                        pos_shift_count += 1
-                    else:
-                        pos_shift_count += 2
+            if current_scaffold_sequence[1][(int(healing_pos[1]) + pos_shift_count)] == "N" and (temp_false == 0):
+                correct_position_count += 1
 
-                    break
+            """else:
+
+                if temp_false == 7:
+
+                    interesting_position = int(healing_pos[1]) + pos_shift_count
+                    print("#################")
+                    print(healing_pos)
+                    print(current_scaffold_sequence[1][(interesting_position - 2):(interesting_position + 3)])
+                    print(current_scaffold_sequence[1][(interesting_position - 20):(interesting_position + 21)])
+
+                    exit()
+
+                else:
+                    interesting_position = int(healing_pos[1]) + pos_shift_count
+                    print("#################")
+                    print(healing_pos)
+                    print(current_scaffold_sequence[1][(interesting_position - 2):(interesting_position + 3)])
+                    print(current_scaffold_sequence[1][(interesting_position - 20):(interesting_position + 21)])
+
+                    temp_false += 1"""
+
+            # Increase position count
+            if healing_pos[2] == "D":
+                pos_shift_count += 1
+            else:
+                pos_shift_count += 2
+
+        break
 
     print("Correct placed positions: ", correct_position_count)
 
