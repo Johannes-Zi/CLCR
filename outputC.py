@@ -20,6 +20,7 @@ def heal_assembly_file(healing_region_list, input_fna_path, outut_dir):
     :param input_fna_path:  File path to the original assembly file
     :return: File path to the new modified assembly file
     """
+
     # Read in the .fna file for fast access
     input_fna_file = open(input_fna_path)
     scaffold_list = []  # Filled with the sequences of the fna file
@@ -53,7 +54,8 @@ def heal_assembly_file(healing_region_list, input_fna_path, outut_dir):
     # For this, in this first sort, the queries in each scaffold are sorted descending by their start position
     # but the reverse option also sorts the scaffolds descending
     sorted_healing_region_list = sorted(healing_region_list, reverse=True,  key=lambda temp_query: (temp_query[0],
-                                                                                                    temp_query[1]))
+                                                                                                    int(temp_query[1])))
+
     print("Queries sorted")
     count = 0
 
@@ -74,7 +76,7 @@ def heal_assembly_file(healing_region_list, input_fna_path, outut_dir):
                 query_start_pos = int(query[1])
                 count += 1
                 # Second sort step, now the frameshift positions in each query are sorted descending
-                temp_sorted_query = sorted(query[3], reverse=True,  key=lambda temp_query: temp_query[0])
+                temp_sorted_query = sorted(query[3], reverse=True,  key=lambda temp_query: int(temp_query[0]))
 
                 for frameshift_position in temp_sorted_query:      # Same usage of reversed() as before
                     # Deletion case
@@ -874,10 +876,12 @@ def create_detailed_healing_information_file(considered_diamond_hits_list, outpu
     # Create new output file
     output_tsv_file = open(output_file_path, "w")
 
-    # Iterate through the query information and save the information in teh new file
+    # Iterate through the query information and save the information in the new file
     for query_data in considered_diamond_hits_list:
 
-        for healing_pos in query_data[9]:
+        sorted_query_data = sorted(query_data[9], key=lambda temp_query_data: int(temp_query_data[0]))
+
+        for healing_pos in sorted_query_data:
 
             # More detailed info about the format in the docstring
             output_tsv_file.write(("\t".join([query_data[0], str(int(healing_pos[0]) + int(query_data[3])),
