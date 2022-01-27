@@ -403,14 +403,13 @@ def filter_out_relevant_results(all_diamond_results, max_detect_dist, low_cov_re
     the minimum base-pair length to work as a query. In this case frameshifts could also be detected at positions of the
     expanded part of the query and not in the original low cov. part. Or when low cov regions were merged together in
     the merge step, and region between them is also part of the query. Those frameshifts contradict to the program
-    approach of healing frameshifts at low cov. regions that correlate with bad polishing. To implement a "soft" cutoff
+    approach of healing frameshifts at low cov. regions that correlate with bad polishing.
+    To implement a "soft" cutoff.
     between considered and "thrown away" frameshift information, frameshifts that are still close to the original low
     cov. region are also considered. "Close" is defined by the max_detect_dist parameter, so eg. max_detect_dist = 10
     -> frameshifts that are 10Bp away from the low cov. region are still considered.
     The first output list (considered_diamond_hits_list), contains all Diamond hits (with the corresponding
-    information), that where considered for the healing by the overlapping heuristic (The list format could be seen
-    below in the code comments), REMIND all detected frameshifts of each Diamond hit are stored in this list, even when
-    they are not considered in the following healing process!!!
+    information), that where considered in the healing step.
     The second output list (healing_region_list), contains the combined frameshift information of all Diamond hits per
     query, which means the scaffold, start position of the query in the scaffold, end position of the query in the
     scaffold, and a list with all positions in the query, where frameshifts are detected and need to be healed later.
@@ -420,7 +419,7 @@ def filter_out_relevant_results(all_diamond_results, max_detect_dist, low_cov_re
     The frameshifts are saved as eg. (20, I) or (12, D), which stands for an insertion 20 base-pairs downstream of the
     query start position, or a deletion 12 base-pair downstream.
 
-    The output file considered_diamond_hits_list contains all relevatn information of each in the healing considered
+    The output file considered_diamond_hits_list contains all relevant information of each in the healing considered
     query in the format like this:
     [[scaffold, low cov. start pos in scaffold, low cov. end pos. ,query start pos., query end pos.,
                 # protein_hit, e_value, bit_score, similarity_percentage, [COMPLETEframeshift_list]], ...]
