@@ -1,11 +1,15 @@
 #!python3
 
-"""Function for extracting the coverage data out of the bam files by using samtools"""
+"""Functions/features that are currently not supported"""
 __author__ = "6947325: Johannes Zieres"
 __credits__ = ""
 __email__ = "johannes.zieres@gmail.com"
 
 import os
+
+
+def main():
+    print("inactive_features main() called!")
 
 
 def convert_bam(bam_file, fna_file):
@@ -31,10 +35,6 @@ def convert_bam(bam_file, fna_file):
 
     # Return the path of the created coverage .txt file
     return os.path.split(__file__)[0] + "/" + file_name
-
-
-def main():
-    print("Convert bam files main executed")
 
 
 if __name__ == '__main__':
