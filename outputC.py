@@ -866,6 +866,9 @@ def create_detailed_healing_information_file(considered_diamond_hits_list, outpu
     query end pos. in scaff., underlying low coverage region start pos. in scaff, low cov. end pos. in scaff.,
     protein hit, e-value, bit-score, similarity-percentage
 
+    Note, the healing positions in each scaffold are sorted ascending, but the sorting of the scaffolds depends on how
+    the python sort function behaves with the used scaffold names!
+
     With this information, the underlying diamond hit for each healing positions could be clearly identified in the
     diamond output data, for further analysis
     :param considered_diamond_hits_list: Output of the filter_out_relevant_results function
@@ -873,8 +876,8 @@ def create_detailed_healing_information_file(considered_diamond_hits_list, outpu
     :return:
     """
 
-    # Create new output file
-    output_tsv_file = open(output_file_path, "w")
+    # Create the lines for the output file
+    output_line_data_list = []      # Stores the data for the lines
 
     # Iterate through the query information and save the information in the new file
     for query_data in considered_diamond_hits_list:
@@ -883,10 +886,20 @@ def create_detailed_healing_information_file(considered_diamond_hits_list, outpu
 
         for healing_pos in sorted_query_data:
 
-            # More detailed info about the format in the docstring
-            output_tsv_file.write(("\t".join([query_data[0], str(int(healing_pos[0]) + int(query_data[3])),
-                                             healing_pos[1], query_data[3], query_data[4], query_data[1], query_data[2],
-                                             query_data[5], query_data[6], query_data[7], query_data[8]]) + "\n"))
+            output_line_data_list.append([query_data[0], str(int(healing_pos[0]) + int(query_data[3])),
+                                          healing_pos[1], query_data[3], query_data[4], query_data[1],
+                                          query_data[2], query_data[5], query_data[6], query_data[7],
+                                          query_data[8]])
+
+    # Sort the healing positions in the list ascending by their healing positions in the scaffolds
+    output_lines_list = sorted(output_line_data_list, key=lambda temp_query_data: (temp_query_data[0],
+                                                                                   int(temp_query_data[1])))
+
+    # Create new output file
+    output_tsv_file = open(output_file_path, "w")
+
+    for out_line_data in output_lines_list:
+        output_tsv_file.write(("\t".join(out_line_data) + "\n"))
 
     output_tsv_file.close()
 
