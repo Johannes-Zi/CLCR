@@ -5,8 +5,6 @@ __author__ = "6947325: Johannes Zieres"
 __credits__ = ""
 __email__ = "johannes.zieres@gmail.com"
 
-import os
-
 
 def create_slurmarry(protein_database, input_dir, output_dir, slurm_dir):
     """
@@ -18,8 +16,10 @@ def create_slurmarry(protein_database, input_dir, output_dir, slurm_dir):
     :return: CLCR_slurmarray.slurm file at the cwd
     """
 
+    slurm_file = slurm_dir + "CLCR_slurmarray.slurm"
+
     # creating the .slurm file for the jobarray
-    slurm_file = open(slurm_dir, "w")
+    slurm_file = open(slurm_file, "w")
 
     # -d database, -q query, -o output path, -k max hits saved per query seq in output file
     blast_command = "diamond blastx -d " + protein_database + " "\
@@ -32,7 +32,8 @@ def create_slurmarry(protein_database, input_dir, output_dir, slurm_dir):
                      "#SBATCH --account=praktikant\n"
                      "#SBATCH --cpus-per-task=4\n"
                      "#SBATCH --mem-per-cpu=16gb\n"
-                     "#SBATCH --job-name=\"CLCR_run\"\n\n")
+                     "#SBATCH --job-name=\"CLCR_run\"\n"
+                     "#SBATCH --output=\"" + slurm_dir + "slurm-%j.out\"\n\n")
 
     slurm_file.write(blast_command)
     slurm_file.close()
