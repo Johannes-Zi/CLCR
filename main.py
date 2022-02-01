@@ -142,6 +142,69 @@ def prepare_slurm_run(project_dir, protein_database, auto_run):
     return None
 
 
+def create_healed_assembly(project_dir, unhealed_assembly, dynamic_threshold_dist):
+    """
+    This function creates a healed version of the handed over assembly. Log file is saved in the storage_files directory
+    :param project_dir: path of the project dir
+    :param unhealed_assembly: path to the original assembly
+    :param dynamic_threshold_dist: The max_detect_distance defines the distance from
+                            a detected frameshift position to the original low cov. region, where a frameshift is still
+                            considered and not excluded in the further analysis. Values around 10 might be reasonable.
+    :return: None
+    """
+
+    # Stores the relevant data of the current run
+    run_information = ["CLCR create_healed_assembly run \t\t" + time.ctime(time.time())]   # Initialising
+
+    start_time = time.time()
+
+    # Read in the diamond results
+    output_dir = project_dir + "diamond_output/"
+    all_diamond_results = output_processing.read_in_diamond_output(output_dir)
+
+    # Read in the original low cov. regions
+    low_cov_storage_tsv = project_dir + "storage_files/original_low_cov_regions.tsv"
+    stored_low_cov_regions = query_creation.read_in_low_cov_tsv_file(low_cov_storage_tsv)
+
+    # Filter out relevant frameshift positions
+    temp_list_1 = output_processing.filter_out_relevant_results(all_diamond_results, dynamic_threshold_dist,
+                                                                stored_low_cov_regions)
+    considered_diamond_hits_list, healing_region_list, considered_frameshifts_count, frameshifts_detected, \
+    insertion_count, deletion_count = temp_list_1
+
+    # Create healing data file
+    healing_data_path = project_dir + "storage_files/healing_data.tsv"
+    assembly_healing.create_detailed_healing_information_file(considered_diamond_hits_list, healing_data_path)
+
+    # Create healed assembly file
+    new_assembly_dir = project_dir + "healed_assembly/"
+    temp_list_2 = assembly_healing.heal_assembly_file(healing_region_list, unhealed_assembly, new_assembly_dir)
+    new_fna_file_path, simplified_distance_distribution = temp_list_2
+
+    # Calculate the runtime
+    run_time = time.strftime("%Hh%Mm%Ss", time.gmtime((time.time() - start_time)))
+    # Append relevant information
+    run_information.append("Runtime:\t\t\t\t" + run_time)
+    run_information.append("Queries with at least one frameshift: \t" + str(len(healing_region_list)))
+    run_information.append("Queries with at least one Diamond hit: \t" + str(len(all_diamond_results)))
+    run_information.append("Considered frameshifts in the healing process: \t" + str(considered_frameshifts_count))
+    # Regardless if they are in the original low cov or not, putative intron transition frameshift excluded
+    # run_information.append("Considered frameshifts by the overlapping heuristic: \t" + str(frameshifts_detected))
+    run_information.append("Healed insertions: \t" + str(insertion_count))
+    run_information.append("Healed deletion: \t" + str(deletion_count))
+
+    # Create run information file
+    storage_files_dir_path = project_dir + "storage_files/"
+    run_info_file = open((storage_files_dir_path + "create_healed_assembly" + time.strftime("%Y%m%d-%H%M%S") + ".txt"),
+                         "w")
+    for line in run_information:
+        run_info_file.write((line + "\n"))
+
+    run_info_file.close()
+
+    return None
+
+
 def main():
     print("CLCR MAIN CALLED")
 
@@ -166,9 +229,14 @@ def main():
     auto_run = False
     prepare_slurm_run(project_dir, protein_database, auto_run)"""
 
+    # Create healed assembly file
+    project_dir = "/home/johannes/Desktop/trachinus_draco/healing_runs/TRAdr_healing_run_01.02.2022/"
+    unhealed_assembly = "/share/gluster/assemblies/Tdraco/" \
+                   "t_draco_pacbio_salsa.FINAL_gap_closed.scaff_seqs_FINAL_pilon_2.fasta"
+    create_healed_assembly(project_dir, unhealed_assembly)
 
 
-    """# Read in the diamond results
+    # Read in the diamond results
 
     output_dir = "/home/johannes/Desktop/trachinus_draco/healing_runs/TRAdr_healing_run_10.01.2022/output_files/"
 
@@ -178,33 +246,18 @@ def main():
                           "storage_files/original_low_cov_regions.tsv"
     stored_low_cov_regions = query_creation.read_in_low_cov_tsv_file(low_cov_storage_tsv)
 
-    considered_diamond_hits_list, healing_region_list = output_processing.filter_out_relevant_results(all_diamond_results, 10,
-                                                                                                      stored_low_cov_regions)
+    consid_diamond_hits_list, healing_region_list = output_processing.filter_out_relevant_results(all_diamond_results,
+                                                                                                  10,
+                                                                                                  stored_low_cov_regions
+                                                                                                  )
 
     healing_data_path = "/home/johannes/Desktop/trachinus_draco/healing_runs/TRAdr_healing_run_10.01.2022/" \
                         "storage_files/healing_data.tsv"
 
-    assembly_healing.create_detailed_healing_information_file(considered_diamond_hits_list, healing_data_path)
-
-    #output_path = "/home/johannes/Desktop/considered_hits_len_distribution.png"
-    #merged_len_dist = [[5, 71975], [25, 29666], [50, 24082], [100, 32263], [250, 35836], [500, 31516], [1000, 17666],
-    #                    [5000, 9168], [float("inf"), 695]]
-    #length_distribution = outputP.considered_diamond_hit_length_distribution_plot(considered_diamond_hits_list,
-    #                                                                              output_path, merged_len_dist)
-    #print(length_distribution)
+    assembly_healing.create_detailed_healing_information_file(consid_diamond_hits_list, healing_data_path)
 
     print(len(healing_region_list), " queries with at least one frameshift found")
     print(len(all_diamond_results), " queries had at least one Diamond hit")
-
-    # Assembly file
-    #assembly_file = "/share/gluster/assemblies/Tdraco/" \
-    #                "t_draco_pacbio_salsa.FINAL_gap_closed.scaff_seqs_FINAL_pilon_2.fasta"
-
-    # Create queries who might introduce putative wrong healing:
-    #wrong_healing_query_dir = "/home/johannes/Desktop/trachinus_draco/putative_wrong_healed_queries/"
-    #compD.custom_query_files_creation(diamond_query_list, assembly_file, 0, wrong_healing_query_dir, 1)
-
-    # sbatch --array=1-53 CLCR_slurmarray.slurm
 
     old_assembly = "/share/gluster/assemblies/Tdraco/" \
                    "t_draco_pacbio_salsa.FINAL_gap_closed.scaff_seqs_FINAL_pilon_2.fasta"
@@ -214,8 +267,6 @@ def main():
 
     new_fna_file_path, simplified_distance_distribution = assembly_healing.heal_assembly_file(healing_region_list, old_assembly,
                                                                                               new_assembly_dir)
-
-    #print(simplified_distance_distribution)
     
     #"""
 
