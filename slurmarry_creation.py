@@ -8,18 +8,18 @@ __email__ = "johannes.zieres@gmail.com"
 import os
 
 
-def create_slurmarry(protein_database, input_dir, output_dir):
+def create_slurmarry(protein_database, input_dir, output_dir, slurm_dir):
     """
     Simply creates the slurmarray file for a given input and output directory (each dir with an / at the end!)
     :param protein_database: trivial
     :param input_dir: trivial
     :param output_dir: trivial
+    :param slurm_dir: path to the directory where the slurm file should be created
     :return: CLCR_slurmarray.slurm file at the cwd
     """
 
     # creating the .slurm file for the jobarray
-    slurm_filename = os.getcwd() + "/" + "CLCR_slurmarray.slurm"
-    slurm_file = open(slurm_filename, "w")
+    slurm_file = open(slurm_dir, "w")
 
     # -d database, -q query, -o output path, -k max hits saved per query seq in output file
     blast_command = "diamond blastx -d " + protein_database + " "\
