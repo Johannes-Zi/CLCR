@@ -9,7 +9,6 @@ import glob
 
 
 def exclude_putative_transition_frameshift(query_alignment, subject_alignment, frameshift_position):
-
     """
     Checks if the detected frameshifts correlates with a putative intron an could be thus neglected.
     :param query_alignment: aligned query subsequence
@@ -88,7 +87,7 @@ def read_in_diamond_output(output_dir):
         current_output_file = open(x, "r")
 
         # Initialising the parameters
-        query_hit_list = []    # Contains all hits of the current query
+        query_hit_list = []  # Contains all hits of the current query
 
         # Position information of the current region
         # [scaffold, low_cov_start_pos_in_scaffold, low_cov_end_pos_in_scaffold, query_start_pos_in_scaffold,
@@ -98,10 +97,10 @@ def read_in_diamond_output(output_dir):
         query_alignment = ""
         # The following two parameters are important for the localising of the frameshift in the scaffold, and the later
         # Overlapping heuristic for decide which frameshifts are considered in each query
-        query_alignment_start_pos = 0   # Saves the start position of the alignment in the query, initialising it with 0
-                                        # Is no problem because Diamond starts with counting at 1
+        query_alignment_start_pos = 0  # Saves the start position of the alignment in the query, initialising it with 0
+        # Is no problem because Diamond starts with counting at 1
 
-        query_alignment_end_pos = 0     # for saving the current end position of each alignment
+        query_alignment_end_pos = 0  # for saving the current end position of each alignment
         subject_alignment = ""
         # The following three store the respective values
         protein_hit = ""
@@ -151,14 +150,14 @@ def read_in_diamond_output(output_dir):
                         # !!!!!IMPORTANT STEP!!!!!!
                         # If the gene of the protein hit lays on the reverse strand, the alignment needs to be inverted
                         # to fit for the following processing
-                        if current_protein_hit[6] > current_protein_hit[7]:     # Alignment start pos. > end pos.
+                        if current_protein_hit[6] > current_protein_hit[7]:  # Alignment start pos. > end pos.
                             # Swap the positions to fit the inverted alignment
                             current_protein_hit[6], current_protein_hit[7] = current_protein_hit[7], \
-                                                                                 current_protein_hit[6]
+                                                                             current_protein_hit[6]
 
                             # Reverse the complete query-protein alignment
-                            current_protein_hit[4] = current_protein_hit[4][::-1]   # aligned query part
-                            current_protein_hit[5] = current_protein_hit[5][::-1]   # aligned protein part
+                            current_protein_hit[4] = current_protein_hit[4][::-1]  # aligned query part
+                            current_protein_hit[5] = current_protein_hit[5][::-1]  # aligned protein part
 
                         # The placed gaps in the query in the alignment are counted for a correct position calculation
                         query_gap_count = 0
@@ -220,13 +219,12 @@ def read_in_diamond_output(output_dir):
 
             # Line containing the protein id
             if line.startswith(">"):
-
                 # Appends the previous protein hit to the list with all hits of each query
                 # If This is the first hit of te current query, the last protein hit of the previous query is appended,
                 # but this "initialising" element is later at the Query= if request removed. In a normal case each hit
                 # is appended by the following hit of the same query, and the last hit is also appended at the Query= if
                 query_hit_list.append([protein_hit, e_value, bit_score, similarity_percentage, query_alignment,
-                                      subject_alignment, query_alignment_start_pos, query_alignment_end_pos])
+                                       subject_alignment, query_alignment_start_pos, query_alignment_end_pos])
 
                 # Reset/set the new parameters
                 protein_hit = line.split()[0][1:]  # containing the protein hit of the current region
@@ -251,7 +249,7 @@ def read_in_diamond_output(output_dir):
                 if not query_alignment_start_pos:
                     query_alignment_start_pos = int(line.split()[1])
 
-                query_alignment_end_pos = int(line.split()[3])   # Append the currently last alignment position
+                query_alignment_end_pos = int(line.split()[3])  # Append the currently last alignment position
                 query_alignment += line.split()[2]
 
             # Subject alignment line case
@@ -327,8 +325,8 @@ def read_in_diamond_output(output_dir):
 
                 # Appends the data of the current protein hit to the query specific list
                 processed_query_hit_list[5].append([current_protein_hit[0], current_protein_hit[1],
-                                                   current_protein_hit[2], current_protein_hit[3], frameshift_list,
-                                                   current_protein_hit[6], current_protein_hit[7]])
+                                                    current_protein_hit[2], current_protein_hit[3], frameshift_list,
+                                                    current_protein_hit[6], current_protein_hit[7]])
 
                 # Reset the list for the next protein hit
                 frameshift_list = []
@@ -424,7 +422,8 @@ def filter_out_relevant_results(all_diamond_results, max_detect_dist, low_cov_re
                             a detected frameshift position to the original low cov. region, where a frameshift is still
                             considered and not excluded in the further analysis. Values around 10 might be reasonable.
     :param low_cov_regions: output of the read_in_low_cov_tsv_file() function, to heal only in low cov. regions
-    :return: considered_diamond_hits_list, healing_region_list
+    :return: considered_diamond_hits_list, healing_region_list, considered_frameshifts_count, frameshifts_detected, \
+           insertion_count, deletion_count
     """
 
     # healing_region_list contains the final query information for all queries, and functions as output list
@@ -516,11 +515,6 @@ def filter_out_relevant_results(all_diamond_results, max_detect_dist, low_cov_re
         if filtered_query_frameshift_list:
             healing_region_list.append([query_data[0], query_data[3], query_data[4], filtered_query_frameshift_list])
 
-    print(considered_frameshifts_count, " Frameshifts are considered in the healing process")
-
-    # regardless if they are in the original low cov or nor, putative intron transition frameshift excluded
-    print(frameshifts_detected, " Frameshifts are considered by the overlapping heuristic")
-
     # Calculate the ratio between healed insertions and deletions
     deletion_count = 0
     insertion_count = 0
@@ -531,10 +525,11 @@ def filter_out_relevant_results(all_diamond_results, max_detect_dist, low_cov_re
             else:
                 insertion_count += 1
 
-    print(insertion_count, "Amount of considered insertions in the healing process")
-    print(deletion_count, "Amount of considered deletions in the healing process")
+    # For a better readable code
+    output_tuple = considered_diamond_hits_list, healing_region_list, considered_frameshifts_count, \
+                   frameshifts_detected, insertion_count, deletion_count
 
-    return considered_diamond_hits_list, healing_region_list
+    return output_tuple
 
 
 def main():
