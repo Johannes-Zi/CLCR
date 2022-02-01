@@ -91,7 +91,7 @@ def create_queries(project_dir, cov_file_path, assembly_file, low_cov_start, low
     # Calculate the runtime
     run_time = time.strftime("%Hh%Mm%Ss", time.gmtime((time.time() - start_time)))
     # Append the runtime info at the second position
-    run_information = [run_information[0], str("Runtime:\t\t\t" + run_time)] + run_information[1:]
+    run_information = [run_information[0], str("Runtime:\t\t\t\t" + run_time)] + run_information[1:]
 
     # Create run information file
     run_info_file = open((storage_files_dir_path + "query_creation_" + time.strftime("%Y%m%d-%H%M%S") + ".txt"), "w")
@@ -105,11 +105,12 @@ def create_queries(project_dir, cov_file_path, assembly_file, low_cov_start, low
 
 def prepare_slurm_run(project_dir, protein_database, auto_run):
     """
-
-    :param project_dir:
-    :param protein_database:
-    :param auto_run:
-    :return:
+    Creates the slurmarray file for the current run, if auto_run ist set True, the job will be automatically submitted
+    to the computer cluster
+    :param project_dir: path to the project directory
+    :param protein_database: path to the protein database
+    :param auto_run: automatic job submitting if True
+    :return: None
     """
 
     # Delete the slurm directory with all files in it, if it already exists
@@ -123,20 +124,19 @@ def prepare_slurm_run(project_dir, protein_database, auto_run):
 
     # Relevant dirs for diamond
     input_dir = project_dir + "query_files/"
-    output_dir = project_dir + "diamond_output"
-    slurm_file = slurm_dir_path + "CLCR_slurmarray.slurm"
+    output_dir = project_dir + "diamond_output/"
 
     # Create slurmarray file
-    slurmarry_creation.create_slurmarry(protein_database, input_dir, output_dir, slurm_file)
+    slurmarry_creation.create_slurmarry(protein_database, input_dir, output_dir, slurm_dir_path)
 
     # Start slurm job array
     if auto_run:
         # Count the input files
-        input_file_list = glob.glob(input_dir + "/temp_in_*.txt")
+        input_file_list = glob.glob(input_dir + "/temp_in_*.fasta")
         file_count = len(input_file_list)
 
         # Submit job
-        os_command = "sbatch --array=1-" + str(file_count) + slurm_file
+        os_command = "sbatch --array=1-" + str(file_count) + " " + slurm_dir_path + "CLCR_slurmarray.slurm"
         os.system(os_command)
 
     return None
@@ -147,7 +147,7 @@ def main():
 
     # New program structure version
 
-    # Query creation
+    """# Query creation
     project_dir = "/home/johannes/Desktop/trachinus_draco/healing_runs/TRAdr_healing_run_01.02.2022/"
     cov_file_path = "/share/gluster/NOTLOESUNG/freya/T_draco/t_draco.pbc.wgs_short.txt"
     assembly_file = "/share/gluster/assemblies/Tdraco/" \
@@ -158,22 +158,15 @@ def main():
     queries_per_file = 5000
 
     create_queries(project_dir, cov_file_path, assembly_file, low_cov_start, low_cov_end, min_query_len,
-                   queries_per_file)
+                   queries_per_file)"""
 
-    # Create and submit slurm array job
-
-
-
-
-    """# Sending the slurm jobarray to the cluster
+    """# Create and submit slurm array job
+    project_dir = "/home/johannes/Desktop/trachinus_draco/healing_runs/TRAdr_healing_run_01.02.2022/"
     protein_database = "/home/johannes/Desktop/trachinus_draco/protein_db/protein_db.dmnd"
-    input_dir = "/home/johannes/Desktop/trachinus_draco/healing_runs/TRAdr_healing_run_10.01.2022/query_files/"
-    output_dir = "/home/johannes/Desktop/trachinus_draco/healing_runs/TRAdr_healing_run_10.01.2022/output_files/"
+    auto_run = False
+    prepare_slurm_run(project_dir, protein_database, auto_run)"""
 
-    slurmarry_creation.create_slurmarry(protein_database, input_dir, output_dir)
 
-    # sbatch --array=1-51 CLCR_slurmarray.slurm
-    # """
 
     """# Read in the diamond results
 
