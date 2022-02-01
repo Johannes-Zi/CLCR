@@ -12,12 +12,65 @@ import output_processing
 import assembly_healing
 
 
+def create_queries(project_dir, cov_file_path, low_cov_start, low_cov_end, min_query_len, queries_per_file):
+    """
+
+    :param project_dir: Should include / at the end
+    :param cov_file_path:
+    :param low_cov_start:
+    :param low_cov_end:
+    :param min_query_len:
+    :param queries_per_file:
+    :return:
+    """
+
+    # Stores the relevant data of the current run
+    run_information = []
+
+    # Detect the low coverage regions
+    low_cov_regions = query_creation.detect_regions(coverage_file_path, low_cov_start, low_cov_end)
+
+    # Count the amount of low cov. regions before merging
+    region_count = 0
+    for scaffold in low_cov_regions:
+        region_count += len(scaffold[1])
+    run_information.append(("Total short read low cov. regions before merging: " + str(region_count)))
+
+    storage_files_dir_path = project_dir + "storage_files/"
+    # Create a storage dir, if it not exists
+    os.system(("[ -d " + storage_files_dir_path + " ] && mkdir " + storage_files_dir_path))
+
+    # Create the "original" low cov regions file
+    low_cov_storage_tsv_path = storage_files_dir_path + "original_low_cov_regions.tsv"
+    query_creation.create_low_cov_tsv_file(low_cov_regions, low_cov_storage_tsv_path)
+
+    # Merge low cov regions, that are closer together than the min_query_lenght/2
+    low_cov_regions = query_creation.merge_close_regions(low_cov_regions, int(min_query_len/2))
+
+    # Delete the query_files directory with all files in it, if it already exists
+    query_files_dir_path = project_dir + "query_files/"
+    os.system(("[ -d " + query_files_dir_path + " ] && rm -r " + query_files_dir_path))
+
+    # Create the new query_files directory
+    os.system(("mkdir " + query_files_dir_path))
+
+
+    return None
+
+
 def main():
     print("MAIN CALLED")
+
+    # New program version
+
+
+
+
 
     # Short read low cov. region detection:
     coverage_file_path = "/share/gluster/NOTLOESUNG/freya/T_draco/t_draco.pbc.wgs_short.txt"
     low_cov_regions = query_creation.detect_regions(coverage_file_path, 15, 18)
+
     region_count = 0
     for scaffold in low_cov_regions:
         region_count += len(scaffold[1])
@@ -27,19 +80,8 @@ def main():
                           "storage_files/original_low_cov_regions.tsv"
     query_creation.create_low_cov_tsv_file(low_cov_regions, low_cov_storage_tsv)
 
-    # Create length distribution plot of the
-    # len_distribution = low_cov_length_distribution_plot(low_cov_regions,
-    #                                                    "/home/johannes/Desktop/low_cov_len_distribution_raw.png")
 
     low_cov_regions = query_creation.merge_close_regions(low_cov_regions, 250)
-    #"""
-
-    # Create length distribution plot of the
-    print("Calculated length distribution")
-    len_distribution = query_creation.low_cov_length_distribution_plot(low_cov_regions,
-                                                       "/home/johannes/Desktop/low_cov_len_distribution_merged.png")
-    print(len_distribution)
-    #"""
 
     region_count = 0
     for scaffold in low_cov_regions:
@@ -55,7 +97,7 @@ def main():
     slurmarry_creation.query_files_creation(low_cov_regions, assembly_file, 500, query_dir_path, 5000)
     # """
 
-    # Sending the slurm jobarray to the cluster
+    """# Sending the slurm jobarray to the cluster
     protein_database = "/home/johannes/Desktop/trachinus_draco/protein_db/protein_db.dmnd"
     input_dir = "/home/johannes/Desktop/trachinus_draco/healing_runs/TRAdr_healing_run_10.01.2022/query_files/"
     output_dir = "/home/johannes/Desktop/trachinus_draco/healing_runs/TRAdr_healing_run_10.01.2022/output_files/"
@@ -65,7 +107,7 @@ def main():
     # sbatch --array=1-51 CLCR_slurmarray.slurm
     # """
 
-    # Read in the diamond results
+    """# Read in the diamond results
 
     output_dir = "/home/johannes/Desktop/trachinus_draco/healing_runs/TRAdr_healing_run_10.01.2022/output_files/"
 
@@ -115,44 +157,6 @@ def main():
     #print(simplified_distance_distribution)
     
     #"""
-
-    # Evaluate the TOGA results
-
-    HLtraDra1_file_path = "/home/johannes/Desktop/trachinus_draco/toga_run_by_Michael_Hiller/" \
-                          "loss_summ_data_HLtraDra1.tsv"
-    HLtraDra3_file_path = "/home/johannes/Desktop/trachinus_draco/toga_run_by_Michael_Hiller/" \
-                          "loss_summ_data_HLtraDra3.tsv"
-    toga_isoforms_tsv = "/home/johannes/Desktop/trachinus_draco/toga_run_by_Michael_Hiller/toga.isoforms.tsv"
-    query_annotation_gtf = "/home/johannes/Desktop/trachinus_draco/toga_run_by_Michael_Hiller/query_annotation.gtf"
-    #putative_wrong_corrected_file_path = "/home/johannes/Desktop/trachinus_draco/toga_run_by_Michael_Hiller/" \
-    #                                     "putative_false_corrected.tsv"
-    putative_wrong_corrected_file_path = "/home/johannes/Desktop/trachinus_draco/toga_run_by_Michael_Hiller/" \
-                                         "putative_rightly_corrected.tsv"
-
-    results_dataframe = output_processing.read_in_toga_lossgene_file(HLtraDra1_file_path, HLtraDra3_file_path, toga_isoforms_tsv,
-                                                                     query_annotation_gtf, putative_wrong_corrected_file_path)
-
-    #outputP.create_toga_result_plot(results_dataframe)
-
-    # search for overlapping
-    healing_data_tsv_path = "/home/johannes/Desktop/trachinus_draco/healing_runs/TRAdr_healing_run_10.01.2022/" \
-                            "storage_files/healing_data.tsv"
-    output_tsv_path = "/home/johannes/Desktop/trachinus_draco/healing_runs/TRAdr_healing_run_10.01.2022/" \
-                      "storage_files/toga_result_analysis.tsv"
-
-    output_processing.check_overlapping_healing_positions_2(putative_wrong_corrected_file_path, healing_data_tsv_path,
-                                                            output_tsv_path)
-
-    diamond_output_dir = "/home/johannes/Desktop/trachinus_draco/healing_runs/TRAdr_healing_run_10.01.2022/" \
-                         "output_files/"
-    #output_file_path = "/home/johannes/Desktop/trachinus_draco/healing_runs/TRAdr_healing_run_10.01.2022/" \
-    #                   "storage_files/putative_wrong_corrected_diamond_hits/"
-    output_file_path = "/home/johannes/Desktop/trachinus_draco/healing_runs/TRAdr_healing_run_10.01.2022/" \
-                       "storage_files/putative_right_corrected_diamond_hits/"
-    output_processing.search_relating_diamond_alignments(output_tsv_path, diamond_output_dir, output_file_path)
-
-
-    # """
 
 
 if __name__ == '__main__':
