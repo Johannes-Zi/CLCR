@@ -5,8 +5,6 @@ __author__ = "6947325: Johannes Zieres"
 __credits__ = ""
 __email__ = "johannes.zieres@gmail.com"
 
-import os
-
 
 def detect_regions(cov_file_path, cov_start, cov_end):
     """
@@ -20,8 +18,6 @@ def detect_regions(cov_file_path, cov_start, cov_end):
     :return: list with the low coverage regions
     """
 
-    print("Detect low coverage regions in the given Pbc file")
-
     import_file = open(cov_file_path)  # Opens the coverage file
     current_position = 0  # Saves the current position
     low_cov = False  # Saves the current coverage situation
@@ -33,7 +29,7 @@ def detect_regions(cov_file_path, cov_start, cov_end):
     current_scaffold = ["scaffoldname", [(0, 10)]]    # Saves the name of the scaffold and all low cov. regions in them.
 
     # Print initialising line
-    print("#####")
+    # print("#####")
 
     # Detects the low coverage regions and saves them in low_coverage_regions list
     for line in import_file:
@@ -41,8 +37,8 @@ def detect_regions(cov_file_path, cov_start, cov_end):
 
         # New scaffold starts, old scaffold information is appended to the final output list
         if splitted_line[0] != current_scaffold[0]:
-            print("\033[A                             \033[A")
-            print("Current scaffold: ", splitted_line[0])
+            # print("\033[A                             \033[A")
+            # print("Current scaffold: ", splitted_line[0])
 
             # Appends the old scaffold to the final output list if low cov. reg. are found in the finished scaffold
             if current_scaffold[1]:
@@ -223,7 +219,7 @@ def query_files_creation(list_with_scaffold_specific_low_cov_reg_lists, fna_file
     :param query_dir: directory where the query files are stored in
     :param seq_per_fasta: max amount of queries stored per fasta, The fisrt and the last file could contain in special
                           cases more queries
-    :return no return
+    :return fasta_count (amount of created query files), count_added_queries (amount of created queries)
     """
 
     # Read in the .fna file for fast access
@@ -409,10 +405,10 @@ def query_files_creation(list_with_scaffold_specific_low_cov_reg_lists, fna_file
     current_fasta.close()
 
     # User information
-    print("Amount of created fasta files: ", fasta_count)
-    print("Amount of created queries: ", count_added_queries)
+    # print("Amount of created fasta files: ", fasta_count)
+    # print("Amount of created queries: ", count_added_queries)
 
-    return None
+    return fasta_count, count_added_queries
 
 
 def main():
