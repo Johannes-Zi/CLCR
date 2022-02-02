@@ -23,7 +23,6 @@ def heal_assembly_file(healing_region_list, input_fna_path, outut_dir):
     temp_scaffold = []  # Contains the current scaffold
     current_header = ""  # Containing the header of the current scaffold
 
-    print("Read in assembly file")
     # Filling the .fna region list/ reading in the original assembly
     for line in input_fna_file:
 
@@ -52,7 +51,6 @@ def heal_assembly_file(healing_region_list, input_fna_path, outut_dir):
     sorted_healing_region_list = sorted(healing_region_list, reverse=True,  key=lambda temp_query: (temp_query[0],
                                                                                                     int(temp_query[1])))
 
-    print("Queries sorted")
     count = 0
 
     # List with the distance of each healed position to the previous healed position
@@ -112,8 +110,6 @@ def heal_assembly_file(healing_region_list, input_fna_path, outut_dir):
 
     # Create the new assembly .fna file path, located in the same dir as the original assembly file
     new_fna_file_path = outut_dir + "healed_assembly.fna"
-
-    print("create new assembly file")
 
     # Creating the new assembly file (with the inserted N's)
     new_fna_file = open(new_fna_file_path, "w")
