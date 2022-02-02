@@ -60,8 +60,8 @@ def heal_assembly_file(healing_region_list, input_fna_path, outut_dir):
 
     for query in sorted_healing_region_list:
         # Search the corresponding scaffold
-        print("\033[A                             \033[A")
-        print("Current Query", count)
+        # print("\033[A                             \033[A")
+        # print("Current Query", count)
 
         # Saves the position in scaffold of the previous healed frameshift, initialised new for each
         previous_healing_position = None
