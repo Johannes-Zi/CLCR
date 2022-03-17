@@ -779,9 +779,9 @@ def complete_prot_exonerate_del(cds_list, protein_file_path):
 
     output_file.close()
 
-    print("-->  The mean mean detection rate is: ",
+    print("-->  The average mean detection rate is: ",
           mean_detection_percentage / len(frameshift_detectionrate_list))
-    print("-->  The mean mean detection percentage is: ",
+    print("-->  The average mean detection percentage is: ",
           (mean_detection_percentage / len(frameshift_detectionrate_list)) * 100, "%")
 
     return None
@@ -915,9 +915,9 @@ def complete_prot_exonerate_ins(cds_list, protein_file_path):
 
     output_file.close()
 
-    print("-->  The mean mean detection rate is: ",
+    print("-->  The average mean detection rate is: ",
           mean_detection_percentage / len(frameshift_detectionrate_list))
-    print("-->  The mean mean detection percentage is: ",
+    print("-->  The average mean detection percentage is: ",
           (mean_detection_percentage / len(frameshift_detectionrate_list)) * 100, "%")
 
     return None
@@ -1004,9 +1004,9 @@ def complete_prot_diamond_del(query_list, protein_database):
 
     output_file.close()
 
-    print("-->  The mean mean detection rate is: ",
+    print("-->  The average mean detection rate is: ",
           mean_detection_percentage / len(frameshift_detectionrate_list))
-    print("-->  The mean mean detection percentage is: ",
+    print("-->  The average mean detection percentage is: ",
           (mean_detection_percentage / len(frameshift_detectionrate_list)) * 100, "%")
 
     return None
@@ -1096,9 +1096,9 @@ def complete_prot_diamond_ins(query_list, protein_database):
 
     output_file.close()
 
-    print("-->  The mean mean detection rate is: ",
+    print("-->  The average mean detection rate is: ",
           mean_detection_percentage / len(frameshift_detectionrate_list))
-    print("-->  The mean mean detection percentage is: ",
+    print("-->  The average mean detection percentage is: ",
           (mean_detection_percentage / len(frameshift_detectionrate_list)) * 100, "%")
 
     return None
