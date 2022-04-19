@@ -914,5 +914,9 @@ def transform_txt_to_gff(txt_file_path):
     return None
 
 
+def main():
+    print("Query creation main executed!")
+
+
 if __name__ == '__main__':
     main()
