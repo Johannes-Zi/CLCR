@@ -15,35 +15,6 @@ import slurmarry_creation
 import output_processing
 import assembly_healing
 
-# Example parser for create queries
-# Initialise parser
-parser = argparse.ArgumentParser(description="CLCR query creation",
-                                 epilog="The assembly healing with CLCR consists of 3 different steps:\n"
-                                        "1. Query creation with the create_queries function\n"
-                                        "2. Performing Diamond alignments, when using slurm as scheduler the "
-                                        "prepare_slurm_run function could be used\n"
-                                        "3. Creating a healed assembly version with the create_healed_assembly "
-                                        "function")
-
-# Add arguments
-parser.add_argument("-p", "--project_dir", type=str, metavar="", required=True, help="Path of the project directory")
-parser.add_argument("-c", "--cov_file_path", type=str, metavar="", required=True, help="Path of the coverage file")
-parser.add_argument("-a", "--assembly_file", type=str, metavar="", required=True, help="Path of the assembly file")
-parser.add_argument("--low_cov_start", type=int, metavar="", required=False, default=15, help="Threshold for detecting "
-                                                                                              "a low cov region")
-parser.add_argument("--low_cov_end", type=int, metavar="", required=False, default=18, help="Threshold for ending a low"
-                                                                                            " cov region")
-parser.add_argument("--min_query_len", type=int, metavar="", required=False, default=500, help="Minimum query length")
-parser.add_argument("--queries_per_file", type=int, metavar="", required=False, default=5000, help="Queries per query"
-                                                                                                   "file")
-
-# Add mutual argments
-#group = parser.add_mutually_exclusive_group()
-#group.add_argument("-t", "--true_if_used", action="store_true", help="-t or --true used!")
-
-# Parse the args
-parser.parse_args()
-
 
 def create_queries(project_dir, cov_file_path, assembly_file, low_cov_start, low_cov_end, min_query_len,
                    queries_per_file):
@@ -252,6 +223,51 @@ def create_healed_assembly(project_dir, unhealed_assembly, dynamic_threshold_dis
     run_info_file.close()
 
     return None
+
+
+# Initialise parser
+parser = argparse.ArgumentParser(description="CLCR query creation",
+                                 epilog="The assembly healing with CLCR consists of 3 different steps:\n"
+                                        "1. Query creation with the create_queries function\n"
+                                        "2. Performing Diamond alignments, when using slurm as scheduler the "
+                                        "prepare_slurm_run function could be used\n"
+                                        "3. Creating a healed assembly version with the create_healed_assembly "
+                                        "function")
+
+# Add subparsers for each command
+subparsers = parser.add_subparsers(help='sub-command help')
+
+# Subparser for query creation
+parser_a = subparsers.add_parser('create_queries', help='Query creation help')
+parser_a.add_argument('test', type=int, help='test help')
+
+# Arguments
+parser_a.add_argument("-p", "--project_dir", type=str, metavar="", required=True, help="Path of the project directory")
+parser_a.add_argument("-c", "--cov_file_path", type=str, metavar="", required=True, help="Path of the coverage file")
+parser_a.add_argument("-a", "--assembly_file", type=str, metavar="", required=True, help="Path of the assembly file")
+parser_a.add_argument("--low_cov_start", type=int, metavar="", required=False, default=15, help="Threshold for detecting "
+                                                                                              "a low cov region")
+parser_a.add_argument("--low_cov_end", type=int, metavar="", required=False, default=18, help="Threshold for ending a low"
+                                                                                            " cov region")
+parser_a.add_argument("--min_query_len", type=int, metavar="", required=False, default=500, help="Minimum query length")
+parser_a.add_argument("--queries_per_file", type=int, metavar="", required=False, default=5000, help="Queries per query"
+                                                                                                   "file")
+parser_a.set_defaults(func=)
+
+# Subparser for query creation
+parser_b = subparsers.add_parser('slurm_run', help='Slurm cluster run help')
+parser_b.add_argument('test', type=int, help='test help')
+
+# Subparser for query creation
+parser_c = subparsers.add_parser('heal_assembly', help='Creation of healed assembly version help')
+parser_c.add_argument('test', type=int, help='test help')
+
+# Add mutual arguments
+#group = parser.add_mutually_exclusive_group()
+#group.add_argument("-t", "--true_if_used", action="store_true", help="-t or --true used!")
+
+# Parse the args
+parser.parse_args()
 
 
 def main():
