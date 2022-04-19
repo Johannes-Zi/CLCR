@@ -225,52 +225,7 @@ def create_healed_assembly(project_dir, unhealed_assembly, dynamic_threshold_dis
     return None
 
 
-# Initialise parser
-parser = argparse.ArgumentParser(description="CLCR query creation",
-                                 epilog="The assembly healing with CLCR consists of 3 different steps:\n"
-                                        "1. Query creation with the create_queries function\n"
-                                        "2. Performing Diamond alignments, when using slurm as scheduler the "
-                                        "prepare_slurm_run function could be used\n"
-                                        "3. Creating a healed assembly version with the create_healed_assembly "
-                                        "function")
-
-# Add subparsers for each command
-subparsers = parser.add_subparsers(help='sub-command help')
-
-# Subparser for query creation
-parser_a = subparsers.add_parser('create_queries', help='Query creation help')
-parser_a.add_argument('test', type=int, help='test help')
-
-# Arguments
-parser_a.add_argument("-p", "--project_dir", type=str, metavar="", required=True, help="Path of the project directory")
-parser_a.add_argument("-c", "--cov_file_path", type=str, metavar="", required=True, help="Path of the coverage file")
-parser_a.add_argument("-a", "--assembly_file", type=str, metavar="", required=True, help="Path of the assembly file")
-parser_a.add_argument("--low_cov_start", type=int, metavar="", required=False, default=15, help="Threshold for detecting "
-                                                                                              "a low cov region")
-parser_a.add_argument("--low_cov_end", type=int, metavar="", required=False, default=18, help="Threshold for ending a low"
-                                                                                            " cov region")
-parser_a.add_argument("--min_query_len", type=int, metavar="", required=False, default=500, help="Minimum query length")
-parser_a.add_argument("--queries_per_file", type=int, metavar="", required=False, default=5000, help="Queries per query"
-                                                                                                   "file")
-parser_a.set_defaults(func=)
-
-# Subparser for query creation
-parser_b = subparsers.add_parser('slurm_run', help='Slurm cluster run help')
-parser_b.add_argument('test', type=int, help='test help')
-
-# Subparser for query creation
-parser_c = subparsers.add_parser('heal_assembly', help='Creation of healed assembly version help')
-parser_c.add_argument('test', type=int, help='test help')
-
-# Add mutual arguments
-#group = parser.add_mutually_exclusive_group()
-#group.add_argument("-t", "--true_if_used", action="store_true", help="-t or --true used!")
-
-# Parse the args
-parser.parse_args()
-
-
-def main():
+def main(input_args):
     print("CLCR MAIN CALLED")
 
     # New program structure version
@@ -303,6 +258,61 @@ def main():
     create_healed_assembly(project_dir, unhealed_assembly, dynamic_threshold_dist)"""
 
 
+def parse_arguments():
+    """Implementation opf the argument parser"""
+
+    # Initialise parser
+    parser = argparse.ArgumentParser(description="CLCR query creation",
+                                     epilog="The assembly healing with CLCR consists of 3 different steps:\n"
+                                            "1. Query creation with the create_queries function\n"
+                                            "2. Performing Diamond alignments, when using slurm as scheduler the "
+                                            "prepare_slurm_run function could be used\n"
+                                            "3. Creating a healed assembly version with the create_healed_assembly "
+                                            "function")
+
+    # Add subparsers for each command
+    subparsers = parser.add_subparsers(help='sub-command help')
+
+    # Subparser for query creation
+    parser_a = subparsers.add_parser('create_queries', help='Query creation help')
+    parser_a.add_argument('test', type=int, help='test help')
+
+    # Arguments
+    # metavar to display the subparameters at the help message
+    parser_a.add_argument("-p", "--project_dir", action='store', metavar="", type=str, required=True,
+                          help="Path of the project directory")
+    parser_a.add_argument("-c", "--cov_file_path", action='store', metavar="", type=str, required=True,
+                          help="Path of the coverage file")
+    parser_a.add_argument("-a", "--assembly_file", action='store', metavar="", type=str, required=True,
+                          help="Path of the assembly file")
+    parser_a.add_argument("--low_cov_start", action='store', metavar="", type=int, required=False, default=15,
+                          help="Threshold for detecting "
+                               "a low cov region")
+    parser_a.add_argument("--low_cov_end", action='store', metavar="", type=int, required=False, default=18,
+                          help="Threshold for ending a low"
+                               " cov region")
+    parser_a.add_argument("--min_query_len", action='store', metavar="", type=int, required=False, default=500,
+                          help="Minimum query length")
+    parser_a.add_argument("--queries_per_file", action='store', metavar="", type=int, required=False, default=5000,
+                          help="Queries per query"
+                               "file")
+
+    # argument groups für die übersichtlichkeit hinzufügen. also zum beispiel die required arguments oder wheigting arguments
+    # nicht mit subparser arbeiten, sonder der einfachehit halber für jede der drei functionen ein eigenes file erstellen,
+    # anstelle alles in die main zu packen
+    # Die jewweiligen files werden aufgerufen, je nachdem wie sie in der pip setup file definiert sind, also ist pip setup
+    # ein kleiner vor parser, welcher zwischen den verschiedenen möglichen parser files unterscheident
+
+    # Wenn True or false als parameter übergeben, dann action wi    e hier nutzen
+    # group.add_argument("-t", "--true_if_used", action="store_true", help="-t or --true used!")
+
+    # Parse the args
+    input_args = parser.parse_args()
+
+    return args
+
+
 if __name__ == '__main__':
-    main()
+    input_args = parse_arguments()
+    main(input_args)
 
