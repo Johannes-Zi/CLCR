@@ -5,6 +5,10 @@ __author__ = "6947325: Johannes Zieres"
 __credits__ = ""
 __email__ = "johannes.zieres@gmail.com"
 
+import time
+import os
+import argparse
+
 
 def detect_regions(cov_file_path, cov_start, cov_end):
     """
@@ -411,9 +415,143 @@ def query_files_creation(list_with_scaffold_specific_low_cov_reg_lists, fna_file
     return fasta_count, count_added_queries
 
 
+def create_queries(args):
+    """
+    Function for the query creation part, including low coverage region detection, merging of low cov. regions that are
+    close together and the query file creation.
+    Creates a new storage_dir if necessary, creates a input and output dir (overwrite if already present)
+    :param args: Arguments from parser
+
+    The following parameters are handed over in the form of args
+    -> project_dir: Should include / at the end
+    -> cov_file_path: path to the coverage file
+    -> assembly_file: path to the assembly file
+    -> low_cov_start: threshold for introducing a low cov region
+    -> low_cov_end: threshold for ending a low cov regions
+    -> min_query_len: minimum query length in bp
+    -> queries_per_file: amount of queries placed per diamond input file
+    :return: None
+    """
+
+    # Initialise args as values for a better overview
+    project_dir = args.project_dir
+    cov_file_path = args.cov_file_path
+    assembly_file = args.assembly_file
+    low_cov_start = args.low_cov_start
+    low_cov_end = args.low_cov_end
+    min_query_len = args.min_query_len
+    queries_per_file = args.queries_per_file
+
+    # Stores the relevant data of the current run
+    run_information = ["CLCR create_queries run \t\t" + time.ctime(time.time())]      # Initialising
+
+    start_time = time.time()
+
+    # Detect the low coverage regions
+    low_cov_regions = detect_regions(cov_file_path, low_cov_start, low_cov_end)
+
+    # Count the amount of low cov. regions before merging
+    region_count = 0
+    for scaffold in low_cov_regions:
+        region_count += len(scaffold[1])
+    run_information.append("Detected low cov. regions:\t\t" + str(region_count))
+
+    storage_files_dir_path = project_dir + "storage_files/"
+    # Create a storage dir, if it not exists
+    os_command = " if ! [ -d " + storage_files_dir_path + " ] ; then mkdir " + storage_files_dir_path + "; fi"
+    os.system(os_command)
+
+    # Create the "original" low cov regions file
+    low_cov_storage_tsv_path = storage_files_dir_path + "original_low_cov_regions.tsv"
+    create_low_cov_tsv_file(low_cov_regions, low_cov_storage_tsv_path)
+
+    # Merge low cov regions, that are closer together than the min_query_length/2
+    low_cov_regions = merge_close_regions(low_cov_regions, int(min_query_len/2))
+
+    # Count the regions after merging
+    region_count = 0
+    for scaffold in low_cov_regions:
+        region_count += len(scaffold[1])
+    run_information.append("Low cov. regions after merging:\t" + str(region_count))
+
+    # Delete the query_files directory with all files in it, if it already exists
+    query_files_dir_path = project_dir + "query_files/"
+    os_command = " if [ -d " + query_files_dir_path + " ] ; then rm -r " + query_files_dir_path + "; fi"
+    os.system(os_command)
+
+    # Create the new query_files directory
+    os_command = "mkdir " + query_files_dir_path
+    os.system(os_command)
+
+    # Delete the diamond_output directory with all files in it, if it already exists
+    diamond_output_dir_path = project_dir + "diamond_output/"
+    os_command = " if [ -d " + diamond_output_dir_path + " ] ; then rm -r " + diamond_output_dir_path + "; fi"
+    os.system(os_command)
+
+    # Create the new diamond_output directory
+    os_command = "mkdir " + diamond_output_dir_path
+    os.system(os_command)
+
+    # Create the query files
+    fasta_count, created_queries = query_files_creation(low_cov_regions, assembly_file, min_query_len,
+                                                                       query_files_dir_path, queries_per_file)
+
+    run_information.append("Created query .fasta files:\t\t" + str(fasta_count))
+    run_information.append("Created queries:\t\t\t" + str(created_queries))
+
+    # Calculate the runtime
+    run_time = time.strftime("%Hh%Mm%Ss", time.gmtime((time.time() - start_time)))
+    # Append the runtime info at the second position
+    run_information = [run_information[0], str("Runtime:\t\t\t\t" + run_time)] + run_information[1:]
+
+    # Create run information file
+    run_info_file = open((storage_files_dir_path + "query_creation_" + time.strftime("%Y%m%d-%H%M%S") + ".txt"), "w")
+    for line in run_information:
+        run_info_file.write((line + "\n"))
+
+    run_info_file.close()
+
+    return None
+
+
 def main():
-    print("Query creation main executed!")
+    version = "1.0.0"
+    # Initialise parser
+    parser = argparse.ArgumentParser(description="CLCR query creation",
+                                     epilog="The assembly healing with CLCR consists of 3 different steps:\n"
+                                            "1. Query creation with the create_queries function\n"
+                                            "2. Performing Diamond alignments, when using slurm as scheduler the "
+                                            "prepare_slurm_run function could be used\n"
+                                            "3. Creating a healed assembly version with the create_healed_assembly "
+                                            "function")
 
+    # Differentiate between required and optional arguments
+    required = parser.add_argument_group('required arguments')
+    optional = parser.add_argument_group('optional arguments')
 
-if __name__ == '__main__':
-    main()
+    # Required arguments
+    required.add_argument("-p", "--project_dir", action='store', metavar="", type=str, required=True,
+                          help="Path of the project directory")
+    required.add_argument("-c", "--cov_file_path", action='store', metavar="", type=str, required=True,
+                          help="Path of the coverage file")
+    required.add_argument("-a", "--assembly_file", action='store', metavar="", type=str, required=True,
+                          help="Path of the assembly file")
+
+    # optional arguments
+    optional.add_argument("--low_cov_start", action='store', metavar="", type=int, required=False, default=15,
+                          help="Threshold for detecting "
+                               "a low cov region")
+    optional.add_argument("--low_cov_end", action='store', metavar="", type=int, required=False, default=18,
+                          help="Threshold for ending a low"
+                               " cov region")
+    optional.add_argument("--min_query_len", action='store', metavar="", type=int, required=False, default=500,
+                          help="Minimum query length")
+    optional.add_argument("--queries_per_file", action='store', metavar="", type=int, required=False, default=5000,
+                          help="Queries per query"
+                               "file")
+
+    # Parse args
+    args = parser.parse_args()
+    # Hand over parsed arguments to create_queries function
+    create_queries(args)
+
