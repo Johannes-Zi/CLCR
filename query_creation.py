@@ -430,6 +430,7 @@ def create_queries(args):
     -> low_cov_end: threshold for ending a low cov regions
     -> min_query_len: minimum query length in bp
     -> queries_per_file: amount of queries placed per diamond input file
+
     :return: None
     """
 
