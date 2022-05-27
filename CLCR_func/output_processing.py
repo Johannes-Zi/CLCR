@@ -531,10 +531,3 @@ def filter_out_relevant_results(all_diamond_results, max_detect_dist, low_cov_re
 
     return output_tuple
 
-
-def main():
-    print("Output Processing main executed")
-
-
-if __name__ == '__main__':
-    main()
