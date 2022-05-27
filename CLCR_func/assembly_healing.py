@@ -8,8 +8,8 @@ __email__ = "johannes.zieres@gmail.com"
 import time
 import os
 import argparse
-import output_processing
-import query_creation
+import CLCR_func.output_processing as output_processing
+import CLCR_func.query_creation as query_creation
 
 
 def heal_assembly_file(healing_region_list, input_fna_path, outut_dir):
