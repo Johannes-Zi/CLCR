@@ -295,13 +295,13 @@ def main():
     optional = parser.add_argument_group('optional arguments')
 
     # Required arguments
-    required.add_argument("-p", "--project_dir", action='store', metavar="", type=str, required=True,
+    required.add_argument("-p", "--project_dir", action='store', type=str, required=True,
                           help="Path of the project directory")
-    required.add_argument("-c", "--unhealed_assembly", action='store', metavar="", type=str, required=True,
+    required.add_argument("-c", "--unhealed_assembly", action='store', type=str, required=True,
                           help="Path of the original unhealed assembly file")
 
     # optional arguments
-    optional.add_argument("--dynamic_threshold_dist", action='store', metavar="", type=int, required=False, default=10,
+    optional.add_argument("--dynamic_threshold_dist", action='store', type=int, required=False, default=10,
                           help="The max_detect_distance defines the distance from a detected frameshift position to"
                                " the original low cov. region, where a frameshift is still considered and not excluded"
                                " in the further analysis.")

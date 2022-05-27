@@ -123,9 +123,9 @@ def main():
     optional = parser.add_argument_group('optional arguments')
 
     # Required arguments
-    required.add_argument("-p", "--project_dir", action='store', metavar="", type=str, required=True,
+    required.add_argument("-p", "--project_dir", action='store', type=str, required=True,
                           help="Path of the project directory")
-    required.add_argument("-c", "--protein_database", action='store', metavar="", type=str, required=True,
+    required.add_argument("-c", "--protein_database", action='store', type=str, required=True,
                           help="Path of the protein database")
 
     # optional arguments
