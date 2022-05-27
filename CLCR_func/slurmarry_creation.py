@@ -112,12 +112,9 @@ def main():
     version = "1.0.0"
     # Initialise parser
     parser = argparse.ArgumentParser(description="CLCR cluster run",
-                                     epilog="The assembly healing with CLCR consists of 3 different steps:\n"
-                                            "1. Query creation with the create_queries function\n"
-                                            "2. Performing Diamond alignments, when using slurm as scheduler the "
-                                            "prepare_slurm_run function could be used\n"
-                                            "3. Creating a healed assembly version with the create_healed_assembly "
-                                            "function")
+                                     epilog="Function creates a slurm-file for the DIAMOND blastx cluster run of the "
+                                            "handed over CLCR project. The jobs are started automatically, when the "
+                                            "--auto_run parameter is activated.")
 
     # Differentiate between required and optional arguments
     required = parser.add_argument_group('required arguments')
@@ -131,7 +128,7 @@ def main():
 
     # optional arguments
     optional.add_argument("--auto_run", type=string_to_bool, nargs='?', const=True, default=False,
-                          help="Activate automatic slurm job submission.")
+                          help="Activate automatic slurm job submission, when parameter is True.")
 
     # Parse args
     args = parser.parse_args()
