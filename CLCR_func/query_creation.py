@@ -519,14 +519,7 @@ def main():
     version = "1.0.0"
     # Initialise parser
     parser = argparse.ArgumentParser(description="CLCR query creation",
-                                     epilog="This function detects the regions with low read coverages in a given pbc "
-                                            "(per base coverage) file. The sequences of the detected regions are "
-                                            "extracted from the handed over assembly and stored as .fasta query files "
-                                            "in the query_files directory of the handed over project. The query_files "
-                                            "directory will be overwritten!\n"
-                                            "A log file with run information and a original_low_cov_regions.tsv with "
-                                            "the original detected low coverage regions before the merging step are "
-                                            "stored at the storage_files dir.")
+                                     epilog="Test")
 
     # Differentiate between required and optional arguments
     required = parser.add_argument_group('required arguments')
@@ -542,7 +535,7 @@ def main():
 
     # optional arguments
     optional.add_argument("--low_cov_start", action='store', metavar="", type=int, required=False, default=15,
-                          help="Threshold for detecting "
+                          help="Threshold for detecting"
                                "a low cov region")
     optional.add_argument("--low_cov_end", action='store', metavar="", type=int, required=False, default=18,
                           help="Threshold for ending a low"
