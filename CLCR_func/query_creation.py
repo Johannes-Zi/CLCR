@@ -518,7 +518,7 @@ def create_queries(args):
 def main():
     version = "1.0.0"
     # Initialise parser
-    parser = argparse.ArgumentParser(description="CLCR query creation",
+    parser = argparse.ArgumentParser(description="##### CLCR query creation #####",
                                      epilog="This function detects the regions with low read coverages in a given pbc "
                                             "(per base coverage) file. The sequences of the detected regions are "
                                             "extracted from the handed over assembly and stored as .fasta query files "

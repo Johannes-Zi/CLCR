@@ -282,7 +282,7 @@ def create_healed_assembly(args):
 def main():
     version = "1.0.0"
     # Initialise parser
-    parser = argparse.ArgumentParser(description="CLCR query creation",
+    parser = argparse.ArgumentParser(description="##### CLCR query creation #####",
                                      epilog="Function for the creation of a healed assembly version. For this the "
                                             "detected frameshifts in the DIAMOND blastx output are evaluated, "
                                             "extensively filtered and used to created a adapted assembly version with "

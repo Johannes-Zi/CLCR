@@ -111,7 +111,7 @@ def string_to_bool(v):
 def main():
     version = "1.0.0"
     # Initialise parser
-    parser = argparse.ArgumentParser(description="CLCR cluster run",
+    parser = argparse.ArgumentParser(description="##### CLCR cluster run #####",
                                      epilog="Function creates a slurm-file for the DIAMOND blastx cluster run of the "
                                             "handed over CLCR project. The jobs are started automatically, when the "
                                             "--auto_run parameter is activated.\n"
