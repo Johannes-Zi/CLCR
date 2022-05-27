@@ -22,8 +22,8 @@ setup(
     ],
     entry_points={
         'console_scripts': ["clcr.query_creation = CLCR_func.query_creation:main",
-                            "clcr.cluster_run = CLCR_func.query_creation:main",
-                            "clcr.assembly_healing = CLCR_func.query_creation:main"],
+                            "clcr.cluster_run = CLCR_func.slurmarray_creation:main",
+                            "clcr.assembly_healing = CLCR_func.assembly_healing:main"],
     },
     license="GPL-3.0",
     classifiers=[
