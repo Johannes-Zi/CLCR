@@ -519,12 +519,14 @@ def main():
     version = "1.0.0"
     # Initialise parser
     parser = argparse.ArgumentParser(description="CLCR query creation",
-                                     epilog="The assembly healing with CLCR consists of 3 different steps:\n"
-                                            "1. Query creation with the create_queries function\n"
-                                            "2. Performing Diamond alignments, when using slurm as scheduler the "
-                                            "prepare_slurm_run function could be used\n"
-                                            "3. Creating a healed assembly version with the create_healed_assembly "
-                                            "function")
+                                     epilog="This function detects the regions with low read coverages in a given pbc "
+                                            "(per base coverage) file. The sequences of the detected regions are "
+                                            "extracted from the handed over assembly and stored as .fasta query files "
+                                            "in the query_files directory of the handed over project. The query_files "
+                                            "directory will be overwritten!\n"
+                                            "A log file with run information and a original_low_cov_regions.tsv with "
+                                            "the original detected low coverage regions before the merging step are "
+                                            "stored at the storage_files dir.")
 
     # Differentiate between required and optional arguments
     required = parser.add_argument_group('required arguments')
@@ -548,8 +550,7 @@ def main():
     optional.add_argument("--min_query_len", action='store', metavar="", type=int, required=False, default=500,
                           help="Minimum query length")
     optional.add_argument("--queries_per_file", action='store', metavar="", type=int, required=False, default=5000,
-                          help="Queries per query"
-                               "file")
+                          help="Queries sequences per query file")
 
     # Parse args
     args = parser.parse_args()
