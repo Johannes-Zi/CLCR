@@ -283,12 +283,12 @@ def main():
     version = "1.0.0"
     # Initialise parser
     parser = argparse.ArgumentParser(description="CLCR query creation",
-                                     epilog="The assembly healing with CLCR consists of 3 different steps:\n"
-                                            "1. Query creation with the create_queries function\n"
-                                            "2. Performing Diamond alignments, when using slurm as scheduler the "
-                                            "prepare_slurm_run function could be used\n"
-                                            "3. Creating a healed assembly version with the create_healed_assembly "
-                                            "function")
+                                     epilog="Function for the creation of a healed assembly version. For this the "
+                                            "detected frameshifts in the DIAMOND blastx output are evaluated, "
+                                            "extensively filtered and used to created a adapted assembly version with "
+                                            "locally healed reading frames.\n"
+                                            "The healed assembly version is stored in the healed_assembly dir, and log "
+                                            "file for the CLCR run is stored in the storage_files dir.")
 
     # Differentiate between required and optional arguments
     required = parser.add_argument_group('required arguments')

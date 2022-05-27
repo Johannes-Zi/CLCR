@@ -114,7 +114,9 @@ def main():
     parser = argparse.ArgumentParser(description="CLCR cluster run",
                                      epilog="Function creates a slurm-file for the DIAMOND blastx cluster run of the "
                                             "handed over CLCR project. The jobs are started automatically, when the "
-                                            "--auto_run parameter is activated.")
+                                            "--auto_run parameter is activated.\n"
+                                            "The slurm log files are stored in the slurm_files dir, a log file for "
+                                            "the CLCR run is stored in the storage_files dir.")
 
     # Differentiate between required and optional arguments
     required = parser.add_argument_group('required arguments')
