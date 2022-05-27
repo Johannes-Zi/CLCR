@@ -519,30 +519,35 @@ def main():
     version = "1.0.0"
     # Initialise parser
     parser = argparse.ArgumentParser(description="CLCR query creation",
-                                     epilog="Test")
+                                     epilog="This function detects the regions with low read coverages in a given pbc "
+                                            "(per base coverage) file. The sequences of the detected regions are "
+                                            "extracted from the handed over assembly and stored as .fasta query files "
+                                            "in the query_files directory of the handed over project. The query_files "
+                                            "directory will be overwritten!\n"
+                                            "A log file with run information and a original_low_cov_regions.tsv with "
+                                            "the original detected low coverage regions before the merging step are "
+                                            "stored at the storage_files dir.")
 
     # Differentiate between required and optional arguments
     required = parser.add_argument_group('required arguments')
     optional = parser.add_argument_group('optional arguments')
 
     # Required arguments
-    required.add_argument("-p", "--project_dir", action='store', metavar="", type=str, required=True,
+    required.add_argument("-p", "--project_dir", action='store', type=str, required=True,
                           help="Path of the project directory")
-    required.add_argument("-c", "--cov_file_path", action='store', metavar="", type=str, required=True,
+    required.add_argument("-c", "--cov_file_path", action='store', type=str, required=True,
                           help="Path of the coverage file")
-    required.add_argument("-a", "--assembly_file", action='store', metavar="", type=str, required=True,
+    required.add_argument("-a", "--assembly_file", action='store', type=str, required=True,
                           help="Path of the assembly file")
 
     # optional arguments
-    optional.add_argument("--low_cov_start", action='store', metavar="", type=int, required=False, default=15,
-                          help="Threshold for detecting"
-                               "a low cov region")
-    optional.add_argument("--low_cov_end", action='store', metavar="", type=int, required=False, default=18,
-                          help="Threshold for ending a low"
-                               " cov region")
-    optional.add_argument("--min_query_len", action='store', metavar="", type=int, required=False, default=500,
+    optional.add_argument("--low_cov_start", action='store', type=int, required=False, default=15,
+                          help="Threshold for detecting a low cov region")
+    optional.add_argument("--low_cov_end", action='store', type=int, required=False, default=18,
+                          help="Threshold for ending a low cov region")
+    optional.add_argument("--min_query_len", action='store', type=int, required=False, default=500,
                           help="Minimum query length")
-    optional.add_argument("--queries_per_file", action='store', metavar="", type=int, required=False, default=5000,
+    optional.add_argument("--queries_per_file", action='store', type=int, required=False, default=5000,
                           help="Queries sequences per query file")
 
     # Parse args
