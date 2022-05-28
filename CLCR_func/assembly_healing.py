@@ -67,6 +67,7 @@ def heal_assembly_file(healing_region_list, input_fna_path, outut_dir, verbose_f
 
     if verbose_func:
         print("## Create healed assembly version ##", flush=True)
+        print("#", len(sorted_healing_region_list), "Queries with healing positions #", flush=True)
         print(" ")      # empty line for first line clear
     for query in sorted_healing_region_list:
         # Search the corresponding scaffold
