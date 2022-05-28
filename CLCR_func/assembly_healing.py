@@ -12,7 +12,7 @@ import CLCR_func.output_processing as output_processing
 import CLCR_func.query_creation as query_creation
 
 
-def heal_assembly_file(healing_region_list, input_fna_path, outut_dir):
+def heal_assembly_file(healing_region_list, input_fna_path, outut_dir, verbose_func):
     """
     Gets the healing_region_list which contains the frameshift positions in each query, and inserts N's at those
     positions, to heal the reading frame. The healed assembly is afterwards saved in the give output directory.
@@ -20,6 +20,7 @@ def heal_assembly_file(healing_region_list, input_fna_path, outut_dir):
     :param healing_region_list: Contains for each query: scaffold, start pos., end pos. in scaff., frameshift pos. list
     :param outut_dir: directory where the new "healed assembly" is stored (should contain a \ at the last position)
     :param input_fna_path:  File path to the original assembly file
+    :param verbose_func: verbose bool
     :return: File path to the new modified assembly file
     """
 
@@ -29,6 +30,8 @@ def heal_assembly_file(healing_region_list, input_fna_path, outut_dir):
     temp_scaffold = []  # Contains the current scaffold
     current_header = ""  # Containing the header of the current scaffold
 
+    if verbose_func:
+        print("## Read in original assembly ##", flush=True)
     # Filling the .fna region list/ reading in the original assembly
     for line in input_fna_file:
 
@@ -62,10 +65,14 @@ def heal_assembly_file(healing_region_list, input_fna_path, outut_dir):
     # List with the distance of each healed position to the previous healed position
     healing_position_distribution = []
 
+    if verbose_func:
+        print("## Create healed assembly version ##", flush=True)
+
     for query in sorted_healing_region_list:
         # Search the corresponding scaffold
-        # print("\033[A                             \033[A")
-        # print("Current Query", count)
+        if verbose_func:
+            print("\033[A                             \033[A", flush=True)
+            print("Current Query", count, flush=True)
 
         # Saves the position in scaffold of the previous healed frameshift, initialised new for each
         previous_healing_position = None
@@ -137,6 +144,9 @@ def heal_assembly_file(healing_region_list, input_fna_path, outut_dir):
 
     new_fna_file.close()
 
+    if verbose_func:
+        print("## Healed assembly version saved ##", flush=True)
+
     return new_fna_file_path, simplified_distance_distribution
 
 
@@ -207,53 +217,59 @@ def create_healed_assembly(args):
     project_dir = args.project_dir
     unhealed_assembly = args.unhealed_assembly
     dynamic_threshold_dist = args.dynamic_threshold_dist
+    verbose_func = args.verbose
+
+    if verbose_func:
+        print("#### clcr.assembly_healing called! ####", flush=True)
 
     # Stores the relevant data of the current run
     run_information = ["CLCR create_healed_assembly run \t\t" + time.ctime(time.time())]   # Initialising
 
     start_time = time.time()
 
-    print("Read in Diamond output")
+    if verbose_func:
+        print("### Read in Diamond output ###", flush=True)
     # Read in the diamond results
     output_dir = project_dir + "diamond_output/"
     all_diamond_results = output_processing.read_in_diamond_output(output_dir)
 
-    print("Create storage dir if not present")
     # Create storage files dir if not present
     storage_files_dir_path = project_dir + "storage_files/"
     os_command = " if ! [ -d " + storage_files_dir_path + " ] ; then mkdir " + storage_files_dir_path + "; fi"
     os.system(os_command)
 
-    print("Read in original low cov regions")
+    if verbose_func:
+        print("### Read in original low cov regions ###", flush=True)
     # Read in the original low cov. regions
     low_cov_storage_tsv = project_dir + "storage_files/original_low_cov_regions.tsv"
     stored_low_cov_regions = query_creation.read_in_low_cov_tsv_file(low_cov_storage_tsv)
 
-    print("Filter out relevant frameshifts")
+    if verbose_func:
+        print("### Filter out relevant frameshifts ###", flush=True)
     # Filter out relevant frameshift positions
     temp_list_1 = output_processing.filter_out_relevant_results(all_diamond_results, dynamic_threshold_dist,
                                                                 stored_low_cov_regions)
     considered_diamond_hits_list, healing_region_list, considered_frameshifts_count, frameshifts_detected, \
     insertion_count, deletion_count = temp_list_1
 
-    print("Create healing data file")
+    if verbose_func:
+        print("### Create healing data file ###", flush=True)
     # Create healing data file
     healing_data_path = project_dir + "storage_files/healing_data.tsv"
     create_detailed_healing_information_file(considered_diamond_hits_list, healing_data_path)
 
-    print("Create healed assembly dir if not present")
     # Create healed assembly dir if not present
     storage_files_dir_path = project_dir + "healed_assembly/"
     os_command = " if ! [ -d " + storage_files_dir_path + " ] ; then mkdir " + storage_files_dir_path + "; fi"
     os.system(os_command)
 
-    print("heal assembly file")
+    if verbose_func:
+        print("### Heal assembly file ###", flush=True)
     # Create healed assembly file
     new_assembly_dir = project_dir + "healed_assembly/"
     temp_list_2 = heal_assembly_file(healing_region_list, unhealed_assembly, new_assembly_dir)
     new_fna_file_path, simplified_distance_distribution = temp_list_2
 
-    print("Calculate runtime")
     # Calculate the runtime
     run_time = time.strftime("%Hh%Mm%Ss", time.gmtime((time.time() - start_time)))
     # Append relevant information
@@ -266,7 +282,8 @@ def create_healed_assembly(args):
     run_information.append("Healed insertions: \t\t\t\t" + str(insertion_count))
     run_information.append("Healed deletion: \t\t\t\t" + str(deletion_count))
 
-    print("Create run information file")
+    if verbose_func:
+        print("### Create log file ###", flush=True)
     # Create run information file
     storage_files_dir_path = project_dir + "storage_files/"
     run_info_file = open((storage_files_dir_path + "create_healed_assembly" + time.strftime("%Y%m%d-%H%M%S") + ".txt"),
@@ -275,6 +292,9 @@ def create_healed_assembly(args):
         run_info_file.write((line + "\n"))
 
     run_info_file.close()
+
+    if verbose_func:
+        print("#### clcr.assembly_healing finished! ####", flush=True)
 
     return None
 
@@ -305,6 +325,8 @@ def main():
                           help="The max_detect_distance defines the distance from a detected frameshift position to"
                                " the original low cov. region, where a frameshift is still considered and not excluded"
                                " in the further analysis.")
+    optional.add_argument("--verbose", action='store_true', required=False,
+                          help="Run information is print in the command line")
 
     # Parse args
     args = parser.parse_args()
