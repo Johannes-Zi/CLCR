@@ -10,7 +10,7 @@ import os
 import argparse
 
 
-def detect_regions(cov_file_path, cov_start, cov_end):
+def detect_regions(cov_file_path, cov_start, cov_end, verbose_func):
     """
     Detecting the low coverage regions in the per base coverage file. Saves for each low coverage region the scaffold
     and the start and end position in the scaffold. Low cov. regions that are spanning two or more scaffolds are
@@ -19,6 +19,7 @@ def detect_regions(cov_file_path, cov_start, cov_end):
     :param cov_file_path: path of input coverage file
     :param cov_start: threshold for detecting a low coverage area
     :param cov_end: threshold for leaving a low coverage area
+    :param verbose_func: verbose option
     :return: list with the low coverage regions
     """
 
@@ -32,17 +33,16 @@ def detect_regions(cov_file_path, cov_start, cov_end):
     start_scaffold = str    # Parameter is for excluding low cov. regions that are spanning multiple scaffolds
     current_scaffold = ["scaffoldname", [(0, 10)]]    # Saves the name of the scaffold and all low cov. regions in them.
 
-    # Print initialising line
-    # print("#####")
-
     # Detects the low coverage regions and saves them in low_coverage_regions list
     for line in import_file:
         splitted_line = line.split()
 
         # New scaffold starts, old scaffold information is appended to the final output list
         if splitted_line[0] != current_scaffold[0]:
-            # print("\033[A                             \033[A")
-            # print("Current scaffold: ", splitted_line[0])
+
+            if verbose_func:
+                print("\033[A                             \033[A", flush=True)
+                print("Current scaffold: ", splitted_line[0], flush=True)
 
             # Appends the old scaffold to the final output list if low cov. reg. are found in the finished scaffold
             if current_scaffold[1]:
@@ -442,14 +442,20 @@ def create_queries(args):
     low_cov_end = args.low_cov_end
     min_query_len = args.min_query_len
     queries_per_file = args.queries_per_file
+    verbose_func = args.verbose
+
+    if verbose_func:
+        print("#### Query creation function called! ####", flush=True)
 
     # Stores the relevant data of the current run
     run_information = ["CLCR create_queries run \t\t" + time.ctime(time.time())]      # Initialising
 
     start_time = time.time()
 
+    if verbose_func:
+        print("### Detect low cov regions ###", flush=True)
     # Detect the low coverage regions
-    low_cov_regions = detect_regions(cov_file_path, low_cov_start, low_cov_end)
+    low_cov_regions = detect_regions(cov_file_path, low_cov_start, low_cov_end, verbose_func)
 
     # Count the amount of low cov. regions before merging
     region_count = 0
@@ -462,10 +468,14 @@ def create_queries(args):
     os_command = " if ! [ -d " + storage_files_dir_path + " ] ; then mkdir " + storage_files_dir_path + "; fi"
     os.system(os_command)
 
+    if verbose_func:
+        print("### Create original_low_cov_regions.tsv ###", flush=True)
     # Create the "original" low cov regions file
     low_cov_storage_tsv_path = storage_files_dir_path + "original_low_cov_regions.tsv"
     create_low_cov_tsv_file(low_cov_regions, low_cov_storage_tsv_path)
 
+    if verbose_func:
+        print("### Merge low cov regions ###", flush=True)
     # Merge low cov regions, that are closer together than the min_query_length/2
     low_cov_regions = merge_close_regions(low_cov_regions, int(min_query_len/2))
 
@@ -493,6 +503,8 @@ def create_queries(args):
     os_command = "mkdir " + diamond_output_dir_path
     os.system(os_command)
 
+    if verbose_func:
+        print("### Create new query files ###", flush=True)
     # Create the query files
     fasta_count, created_queries = query_files_creation(low_cov_regions, assembly_file, min_query_len,
                                                                        query_files_dir_path, queries_per_file)
@@ -505,12 +517,16 @@ def create_queries(args):
     # Append the runtime info at the second position
     run_information = [run_information[0], str("Runtime:\t\t\t\t" + run_time)] + run_information[1:]
 
+    if verbose_func:
+        print("### Create log file ###", flush=True)
     # Create run information file
     run_info_file = open((storage_files_dir_path + "query_creation_" + time.strftime("%Y%m%d-%H%M%S") + ".txt"), "w")
     for line in run_information:
         run_info_file.write((line + "\n"))
 
     run_info_file.close()
+
+    print("#### clcr.query_creation is succesfully finished! ####", flush=True)
 
     return None
 
@@ -526,7 +542,9 @@ def main():
                                             "directory will be overwritten!\n"
                                             "A log file with run information and a original_low_cov_regions.tsv with "
                                             "the original detected low coverage regions before the merging step are "
-                                            "stored at the storage_files dir.")
+                                            "stored at the storage_files dir.\n"
+                                            "ATTENTION!: old query dir and DIAMOND output dir of current project dir is "
+                                            "overwritten as preparation for a new cluster run!!")
 
     # Differentiate between required and optional arguments
     required = parser.add_argument_group('required arguments')
@@ -549,6 +567,8 @@ def main():
                           help="Minimum query length")
     optional.add_argument("--queries_per_file", action='store', type=int, required=False, default=5000,
                           help="Queries sequences per query file")
+    optional.add_argument("--verbose", action='store_true', required=False,
+                          help="Run information is print in the command line")
 
     # Parse args
     args = parser.parse_args()
