@@ -66,6 +66,10 @@ def prepare_slurm_run(args):
     project_dir = args.project_dir
     protein_database = args.protein_database
     auto_run = args.auto_run
+    verbose_func = args.verbose
+
+    if verbose_func:
+        print("#### clcr.slurm_preparation called! ####", flush=True)
 
     # Delete the slurm directory with all files in it, if it already exists
     slurm_dir_path = project_dir + "slurm_files/"
@@ -80,6 +84,8 @@ def prepare_slurm_run(args):
     input_dir = project_dir + "query_files/"
     output_dir = project_dir + "diamond_output/"
 
+    if verbose_func:
+        print("### create slurmarray file ###", flush=True)
     # Create slurmarray file
     create_slurmarry(protein_database, input_dir, output_dir, slurm_dir_path)
 
@@ -89,9 +95,14 @@ def prepare_slurm_run(args):
         input_file_list = glob.glob(input_dir + "/temp_in_*.fasta")
         file_count = len(input_file_list)
 
+        if verbose_func:
+            print("### Submit slurm jobarray ###", flush=True)
         # Submit job
         os_command = "sbatch --array=1-" + str(file_count) + " " + slurm_dir_path + "CLCR_slurmarray.slurm"
         os.system(os_command)
+
+    if verbose_func:
+        print("#### clcr.slurm_preparation finished! ####", flush=True)
 
     return None
 
@@ -131,6 +142,8 @@ def main():
     # optional arguments
     optional.add_argument("--auto_run", type=string_to_bool, nargs='?', const=True, default=False,
                           help="Activate automatic slurm job submission, when parameter is True.")
+    optional.add_argument("--verbose", action='store_true', required=False,
+                          help="Run information is print in the command line")
 
     # Parse args
     args = parser.parse_args()
