@@ -1,3 +1,9 @@
-# CLCR
+# CLCR (CorrectLowCoverageRegions)
 
-in progress
+## The CLCR approach
+
+## Installation
+
+## Quickstart
+
+## Detailed usage information
