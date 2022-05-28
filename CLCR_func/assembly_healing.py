@@ -267,7 +267,7 @@ def create_healed_assembly(args):
         print("### Heal assembly file ###", flush=True)
     # Create healed assembly file
     new_assembly_dir = project_dir + "healed_assembly/"
-    temp_list_2 = heal_assembly_file(healing_region_list, unhealed_assembly, new_assembly_dir)
+    temp_list_2 = heal_assembly_file(healing_region_list, unhealed_assembly, new_assembly_dir, verbose_func)
     new_fna_file_path, simplified_distance_distribution = temp_list_2
 
     # Calculate the runtime
