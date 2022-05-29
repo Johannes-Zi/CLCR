@@ -89,7 +89,7 @@ optional arguments:
   --verbose             Run information is print in the command line
 ```
 
-## Diamond cluster run *clcr.cluster_run*
+### Diamond cluster run *clcr.cluster_run*
 After the query files are created, the next step is to perform the
 Diamond blastx searches against a protein database with the sequences 
 of closely related organisms. This can be done locally on a single computer, 
@@ -122,7 +122,7 @@ optional arguments:
   --verbose             Run information is print in the command line
 ```
 
-## Creation of healed assembly version *clcr.assembly_healing*
+### Creation of healed assembly version *clcr.assembly_healing*
 The last step in the analysis is the creation of an adapted assembly
 version. For this the detected frameshifts in the Diamond
 blastx output are evaluated, extensively filtered and used to created a adapted assembly version with
