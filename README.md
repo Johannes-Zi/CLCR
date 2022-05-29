@@ -151,4 +151,4 @@ optional arguments:
 ```
 
 ## Contact
-For questions, comments or suggestions contact us via [email](mailto:johannes.zieres@gmail.com)
+For error reports, questions, comments or suggestions contact us via [email](mailto:johannes.zieres@gmail.com)
