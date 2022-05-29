@@ -50,6 +50,7 @@ sequences of the detected regions are extracted from the handed over assembly an
 files in the query_files directory of the handed over project. The query_files directory will be
 overwritten! A log file with run information and a original_low_cov_regions.tsv with the original detected
 low coverage regions before the merging step are stored at the storage_files dir. <br /> 
+<br />
 *ATTENTION!*: old query directory and DIAMOND output directory of current project dir is overwritten as preparation for a new cluster run!
 <br /> 
 <br /> 
@@ -88,9 +89,66 @@ optional arguments:
   --verbose             Run information is print in the command line
 ```
 
-## Diamond cluster run
+## Diamond cluster run *clcr.cluster_run*
+After the query files are created, the next step is to perform the
+Diamond blastx searches against a protein database with the sequences 
+of closely related organisms. This can be done locally on a single computer, 
+or on a computer cluster. The usage of a cluster is highly recommended, the CLCR 
+workflow has to be manually adapted to this. The *clcr.cluster_run* function creates a slurm-file for the Diamond blastx 
+cluster run of the handed over CLCR project. 
+The jobs are started automatically on the cluster, when the --auto_run parameter is activated. 
+The slurm log files are stored in the slurm_files dir, a log file for the CLCR run is stored in 
+the storage_files dir.<br />
+<br />
+*ATTENTION!*: Use this function only when your cluster supports slurm and adapt the slurm file manually 
+to your local circumstances! (In this case auto submission is not recommended!)
+<br />
+<br />
+There are the following options:
+```
+  -h, --help            show this help message and exit
 
+required arguments:
+  -p PROJECT_DIR, --project_dir PROJECT_DIR
+                        Path of the project directory
+                        
+  -c PROTEIN_DATABASE, --protein_database PROTEIN_DATABASE
+                        Path of the protein database
 
+optional arguments:
+  --auto_run [AUTO_RUN]
+                        Activate automatic slurm job submission, when parameter is True.
+  
+  --verbose             Run information is print in the command line
+```
+
+## Creation of healed assembly version *clcr.assembly_healing*
+The last step in the analysis is the creation of an adapted assembly
+version. For this the detected frameshifts in the Diamond
+blastx output are evaluated, extensively filtered and used to created a adapted assembly version with
+locally healed reading frames. The healed assembly version is stored in the healed_assembly dir, and log
+file for the CLCR run is stored in the storage_files dir.
+<br />
+<br />
+There are the following options:
+```
+  -h, --help            show this help message and exit
+
+required arguments:
+  -p PROJECT_DIR, --project_dir PROJECT_DIR
+                        Path of the project directory
+                        
+  -c UNHEALED_ASSEMBLY, --unhealed_assembly UNHEALED_ASSEMBLY
+                        Path of the original unhealed assembly file
+
+optional arguments:
+  --dynamic_threshold_dist DYNAMIC_THRESHOLD_DIST
+                        The max_detect_distance defines the distance from a detected frameshift position to
+                        the original low cov. region, where a frameshift is still considered and not
+                        excluded in the further analysis.
+                        
+  --verbose             Run information is print in the command line
+```
 
 ## Contact
 For questions, comments or suggestions contact us via [email](mailto:johannes.zieres@gmail.com)
