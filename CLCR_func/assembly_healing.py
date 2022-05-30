@@ -11,7 +11,7 @@ import argparse
 import CLCR_func.output_processing as output_processing
 import CLCR_func.query_creation as query_creation
 
-
+e
 def heal_assembly_file(healing_region_list, input_fna_path, outut_dir, verbose_func):
     """
     Gets the healing_region_list which contains the frameshift positions in each query, and inserts N's at those
