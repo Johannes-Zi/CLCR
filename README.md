@@ -1,6 +1,7 @@
 # CLCR
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![PyPI version](https://badge.fury.io/py/CLCR.svg)](https://badge.fury.io/py/CLCR)
 
 ## The CLCR approach
 To improve the completeness of draft genome assemblies we created the tool CLCR, which stands for
