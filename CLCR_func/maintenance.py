@@ -135,7 +135,7 @@ def custom_query_files_creation(list_with_scaffold_specific_low_cov_reg_lists, f
     :param fna_file_path: path of the fna file for receiving the base sequence
     :param min_length: expanding the detected regions to 500 if they are smaller, for a better working on diamond
     :param query_dir: directory where the query files are stored in
-    :param seq_per_fasta: max amount of queries stored per fasta, The fisrt and the last file could contain in special
+    :param seq_per_fasta: max amount of queries stored per fasta, The first and the last file could contain in special
                           cases more queries
     :return no return
     """

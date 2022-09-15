@@ -15,13 +15,13 @@ import matplotlib.pyplot as plt
 
 def exclude_proteins_with_j(input_file_path):
     """
-    creates a new protein aminoacid fasta file, without proteins containing J (Leucine or Isoleucine), because EXONERATE
+    Creates a new protein aminoacid fasta file, without proteins containing J (Leucine or Isoleucine), because EXONERATE
     cant handle that at the database creation
     :param input_file_path: file path of the original unmodified protein file
     :return: None, the new file is created at the cwd of the program
     """
 
-    # Initialisiation
+    # Initialisation
     input_file = open(input_file_path)
     new_lines = []
     current_protein = []
@@ -81,7 +81,7 @@ def create_database():
 
 def create_queries(cds_seq_file_path, query_quantity, max_cds_len):
     """
-    reads in the cds regions out of the cds file, afterwards shuffeling the region list and returning as many regions,
+    Reads in the cds regions out of the cds file, afterwards shuffeling the region list and returning as many regions,
     as set with the query_quantity threshold, not more than regions than given
     :param cds_seq_file_path: file path to the cds file
     :param max_cds_len: threshold, all CDS region with a lenght over the parameter are excluded, used at the
@@ -199,15 +199,12 @@ def database_comp_exonerate_del(cds_list, protein_file_path):
     # Run to detect the detection threshold at the beginning
     for region_pair in combined_cds_protein_list:
 
-        # bad programmed process messages
+        # Status update
         if process_count == int(list_length * 0.1):
             print("--> 10% finished")
-        elif process_count == int(list_length * 0.25):
-            print("--> 25% finished")
         elif process_count == int(list_length * 0.5):
             print("--> 50% finished")
-        elif process_count == int(list_length * 0.75):
-            print("--> 75% finished")
+
 
         for position in range(40):      # 40 as biggest position, to prevent unnecessary runs
 
@@ -335,15 +332,11 @@ def database_comp_exonerate_ins(cds_list, protein_file_path):
     # Run to detect the detection threshold at the beginning
     for region_pair in combined_cds_protein_list:
 
-        # bad programmed process messages
+        # Status update
         if process_count == int(list_length * 0.1):
             print("--> 10% finished")
-        elif process_count == int(list_length * 0.25):
-            print("--> 25% finished")
         elif process_count == int(list_length * 0.5):
             print("--> 50% finished")
-        elif process_count == int(list_length * 0.75):
-            print("--> 75% finished")
 
         for position in range(40):      # 40 as biggest position, to prevent unnecessary runs
 
@@ -429,15 +422,11 @@ def database_comp_diamond_del(query_list, protein_database):
     # Run to detect the detection threshold at the beginning
     for cds_region in query_list:
 
-        # bad programmed process messages
+        # Status update
         if process_count == int(list_length * 0.1):
             print("--> 10% finished")
-        elif process_count == int(list_length * 0.25):
-            print("--> 25% finished")
         elif process_count == int(list_length * 0.5):
             print("--> 50% finished")
-        elif process_count == int(list_length * 0.75):
-            print("--> 75% finished")
 
         for position in range(40):  # 40 as biggest position, to prevent unnecessary runs
             # Create current CDS query
@@ -517,15 +506,11 @@ def database_comp_diamond_ins(query_list, protein_database):
     # Run to detect the detection threshold at the beginning
     for cds_region in query_list:
 
-        # bad programmed process messages
+        # Status update
         if process_count == int(list_length * 0.1):
             print("--> 10% finished")
-        elif process_count == int(list_length * 0.25):
-            print("--> 25% finished")
         elif process_count == int(list_length * 0.5):
             print("--> 50% finished")
-        elif process_count == int(list_length * 0.75):
-            print("--> 75% finished")
 
         for position in range(40):  # 40 as biggest position, to prevent unnecessary runs
             insertion_base = random.choice(base_list)  # choose a random base
@@ -714,15 +699,11 @@ def complete_prot_exonerate_del(cds_list, protein_file_path):
     # Run to detect the detection threshold at the beginning
     for region_pair in combined_cds_protein_list:
 
-        # bad programmed process messages
+        # Status update
         if process_count == int(list_length * 0.1):
             print("--> 10% finished")
-        elif process_count == int(list_length * 0.25):
-            print("--> 25% finished")
         elif process_count == int(list_length * 0.5):
             print("--> 50% finished")
-        elif process_count == int(list_length * 0.75):
-            print("--> 75% finished")
 
         # counts how many of the inserted frameshifts are detected
         frameshift_detection_count = 0
@@ -789,13 +770,13 @@ def complete_prot_exonerate_del(cds_list, protein_file_path):
 
 def complete_prot_exonerate_ins(cds_list, protein_file_path):
     """
-        (create frameshift with insertion version)
-        This functions determines the frameshift detection rate in CDS regions by Exonerate, for this the first 50 and last
-        50 nucleotides are skipped, to exclude the alignment cuttoff problem.
-        :param cds_list: list containing the unmodified cds regions, which are later used as modified queries
-        :param protein_file_path:   path to the protein file containing the amino acid sequences
-        :return: None, but an output file containing the results named exonerate_output is created
-        """
+    (create frameshift with insertion version)
+    This functions determines the frameshift detection rate in CDS regions by Exonerate, for this the first 50 and last
+    50 nucleotides are skipped, to exclude the alignment cuttoff problem.
+    :param cds_list: list containing the unmodified cds regions, which are later used as modified queries
+    :param protein_file_path:   path to the protein file containing the amino acid sequences
+    :return: None, but an output file containing the results named exonerate_output is created
+    """
 
     # Reading in the protein sequences
     # Reading in the queries out of the cds file
@@ -849,15 +830,11 @@ def complete_prot_exonerate_ins(cds_list, protein_file_path):
     # Run to detect the detection threshold at the beginning
     for region_pair in combined_cds_protein_list:
 
-        # bad programmed process messages
+        # Status update
         if process_count == int(list_length * 0.1):
             print("--> 10% finished")
-        elif process_count == int(list_length * 0.25):
-            print("--> 25% finished")
         elif process_count == int(list_length * 0.5):
             print("--> 50% finished")
-        elif process_count == int(list_length * 0.75):
-            print("--> 75% finished")
 
         # counts how many of the inserted frameshifts are detected
         frameshift_detection_count = 0
@@ -942,15 +919,11 @@ def complete_prot_diamond_del(query_list, protein_database):
     # Run to detect the detection threshold at the beginning
     for cds_region in query_list:
 
-        # bad programmed process messages
+        # Status update
         if process_count == int(list_length * 0.1):
             print("--> 10% finished")
-        elif process_count == int(list_length * 0.25):
-            print("--> 25% finished")
         elif process_count == int(list_length * 0.5):
             print("--> 50% finished")
-        elif process_count == int(list_length * 0.75):
-            print("--> 75% finished")
 
         # counts how many of the inserted frameshifts are detected
         frameshift_detection_count = 0
@@ -1032,15 +1005,11 @@ def complete_prot_diamond_ins(query_list, protein_database):
     # Run to detect the detection threshold at the beginning
     for cds_region in query_list:
 
-        # bad programmed process messages
+        # Status update
         if process_count == int(list_length * 0.1):
             print("--> 10% finished")
-        elif process_count == int(list_length * 0.25):
-            print("--> 25% finished")
         elif process_count == int(list_length * 0.5):
             print("--> 50% finished")
-        elif process_count == int(list_length * 0.75):
-            print("--> 75% finished")
 
         # counts how many of the inserted frameshifts are detected
         frameshift_detection_count = 0

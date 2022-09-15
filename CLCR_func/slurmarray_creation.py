@@ -42,7 +42,7 @@ def create_slurmarry(protein_database, input_dir, output_dir, slurm_dir):
     slurm_file.write(blast_command)
     slurm_file.close()
 
-    # sending the job via slurm to the cluster
+    # Send the job via slurm to the cluster
     # os.system("sbatch --array=1-" + str(fasta_count) + slurm_filename)
 
     return None

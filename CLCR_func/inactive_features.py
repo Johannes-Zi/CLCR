@@ -10,10 +10,6 @@ import glob
 import copy
 
 
-def main():
-    print("inactive_features main() called!")
-
-
 def combine_regions(input_list_short, input_list_long):
 
     """
@@ -878,16 +874,6 @@ def transform_txt_to_gff(txt_file_path):
     # reading in the txt regions
     gff_line_list = []
 
-    """for line in txt_file:
-
-        line_t = line.strip().split()       # temporary list
-        modified_line = line_t[0] + "\t" + "." + "\t" + "LowCov" + "\t" + line_t[1] + "\t" + line_t[2] + "\t" \
-                        + ".\t.\t.\t" + "protein_hit \"" + line_t[3] + "\"; evalue \"" + line_t[4] + "\"; bitscore \"" \
-                        + line_t[5] + "\"; identities \"" + line_t[6] + "\"; frameshift_count \"" + line_t[7] \
-                        + "\"; assigned_gff_region_type \"" + line_t[8] + "\"; distance_to_next_CDS \"" + line_t[9] \
-                        + "\";\n"
-
-        gff_line_list.append(modified_line)"""
 
     for line in txt_file:
 

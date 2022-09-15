@@ -422,7 +422,7 @@ def create_queries(args):
     Creates a new storage_dir if necessary, creates a input and output dir (overwrite if already present)
     :param args: Arguments from parser
 
-    The following parameters are handed over in the form of args
+    The following parameters are handed over as args
     -> project_dir: Should include / at the end
     -> cov_file_path: path to the coverage file
     -> assembly_file: path to the assembly file
