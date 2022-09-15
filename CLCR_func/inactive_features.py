@@ -874,7 +874,6 @@ def transform_txt_to_gff(txt_file_path):
     # reading in the txt regions
     gff_line_list = []
 
-
     for line in txt_file:
 
         line_t = line.strip().split()       # temporary list

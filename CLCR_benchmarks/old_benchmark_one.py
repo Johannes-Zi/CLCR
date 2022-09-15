@@ -21,7 +21,6 @@ def exclude_proteins_with_j(input_file_path):
     :return: None, the new file is created at the cwd of the program
     """
 
-    # Initialisation
     input_file = open(input_file_path)
     new_lines = []
     current_protein = []
